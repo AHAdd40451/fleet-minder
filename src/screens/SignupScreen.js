@@ -18,8 +18,14 @@ const SignupScreen = ({ navigation }) => {
     }
     
     setLoading(true);
-    // Add your Supabase signup logic here
-    console.log('Signup attempt:', { email, password });
+    try {
+      // Add your Supabase signup logic here
+      console.log('Signup attempt initiated');
+      // Example: const { data, error } = await signUp(email, password);
+      // Handle success/error here
+    } catch (error) {
+      console.error('Signup error:', error.message);
+    }
     setLoading(false);
   };
 

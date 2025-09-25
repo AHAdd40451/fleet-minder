@@ -12,8 +12,14 @@ const LoginScreen = ({ navigation }) => {
 
   const handleLogin = async () => {
     setLoading(true);
-    // Add your Supabase login logic here
-    console.log('Login attempt:', { email, password });
+    try {
+      // Add your Supabase login logic here
+      console.log('Login attempt initiated');
+      // Example: const { data, error } = await signIn(email, password);
+      // Handle success/error here
+    } catch (error) {
+      console.error('Login error:', error.message);
+    }
     setLoading(false);
   };
 

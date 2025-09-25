@@ -21,8 +21,9 @@
   "description": "A React Native Expo app with glassy UI design and Supabase integration",
   "dependencies": {
     "@expo/vector-icons": "^15.0.2",
+    "@react-native-masked-view/masked-view": "^0.3.2",
     "@react-navigation/bottom-tabs": "^7.4.0",
-    "@react-navigation/native": "^7.1.8",
+    "@react-navigation/native": "^7.1.17",
     "@react-navigation/stack": "^7.4.8",
     "@supabase/supabase-js": "^2.57.4",
     "expo": "^54.0.10",
