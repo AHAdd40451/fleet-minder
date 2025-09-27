@@ -102,7 +102,6 @@ const styles = StyleSheet.create({
   container: {
     borderRadius: theme.radius.md,
     overflow: 'hidden',
-    ...theme.shadows.small,
   },
   gradient: {
     flex: 1,

@@ -33,8 +33,7 @@ const GlassCard = ({
 
 const styles = StyleSheet.create({
   container: {
-    overflow: 'hidden',
-    ...theme.shadows.medium,
+    overflow: 'hidden'
   },
   gradient: {
     flex: 1,

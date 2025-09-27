@@ -41,38 +41,6 @@ const HomeScreen = () => {
                 />
               </View>
             </GlassCard>
-
-            <GlassCard style={styles.card}>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>Feature 2</Text>
-                <Text style={styles.cardDescription}>
-                  Cross-platform compatibility with web, iOS, and Android
-                  support built in.
-                </Text>
-                <GlassButton 
-                  title="Explore" 
-                  variant="secondary"
-                  size="small"
-                  onPress={() => console.log('Explore pressed!')}
-                />
-              </View>
-            </GlassCard>
-
-            <GlassCard style={styles.card}>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>Supabase Ready</Text>
-                <Text style={styles.cardDescription}>
-                  Connected to Supabase for real-time database functionality
-                  and authentication.
-                </Text>
-                <GlassButton 
-                  title="Connect" 
-                  variant="accent"
-                  size="small"
-                  onPress={() => console.log('Connect pressed!')}
-                />
-              </View>
-            </GlassCard>
           </View>
         </ScrollView>
       </LinearGradient>
