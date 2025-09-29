@@ -2,6 +2,7 @@
 node_modules/
 
 # Expo/Metro
+.expo
 .expo/
 .expo-shared/
 .expo-cache/
