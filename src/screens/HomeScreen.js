@@ -1,107 +1,124 @@
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView } from 'react-native';
-import { LinearGradient } from 'expo-linear-gradient';
-import { StatusBar } from 'expo-status-bar';
-import { GlassCard, GlassButton } from '../components';
-import theme from '../styles/theme';
+import React, { useState } from "react";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
+import { StatusBar } from "expo-status-bar";
 
-const HomeScreen = () => {
+const OnboardingForm = () => {
+  const [companyName, setCompanyName] = useState("");
+  const [state, setState] = useState("");
+  const [vehicle, setVehicle] = useState("");
+  const [vin, setVin] = useState("");
+  const [odometer, setOdometer] = useState("");
+
+  const handleSubmit = () => {
+    console.log({ companyName, state, vehicle, vin, odometer });
+  };
+
   return (
-    <View style={styles.container}>
+    <LinearGradient colors={["#000", "#111"]} style={styles.container}>
       <StatusBar style="light" />
-      <LinearGradient
-        colors={['#667eea', '#764ba2']}
-        style={styles.background}
-      >
-        <ScrollView 
-          style={styles.scrollView}
-          contentContainerStyle={styles.content}
-          showsVerticalScrollIndicator={false}
-        >
-          <View style={styles.header}>
-            <Text style={styles.title}>Welcome to GlassyApp</Text>
-            <Text style={styles.subtitle}>
-              Beautiful glassy UI with React Native & Expo
-            </Text>
-          </View>
+      <ScrollView contentContainerStyle={styles.content} showsVerticalScrollIndicator={false}>
+        <Text style={styles.header}>Quick Setup</Text>
+        <Text style={styles.subHeader}>Fill in your company and first vehicle details</Text>
 
-          <View style={styles.cardsContainer}>
-            <GlassCard style={styles.card}>
-              <View style={styles.cardContent}>
-                <Text style={styles.cardTitle}>Feature 1</Text>
-                <Text style={styles.cardDescription}>
-                  This is a beautiful glassy card component with blur effects
-                  and gradient backgrounds.
-                </Text>
-                <GlassButton 
-                  title="Learn More" 
-                  variant="primary"
-                  size="small"
-                  onPress={() => console.log('Button pressed!')}
-                />
-              </View>
-            </GlassCard>
-          </View>
-        </ScrollView>
-      </LinearGradient>
-    </View>
+        {/* Company Name */}
+        <Text style={styles.label}>Company Name</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter company name"
+          placeholderTextColor="#666"
+          value={companyName}
+          onChangeText={setCompanyName}
+        />
+
+        {/* State */}
+        <Text style={styles.label}>State</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter state"
+          placeholderTextColor="#666"
+          value={state}
+          onChangeText={setState}
+        />
+
+        {/* Vehicle */}
+        <Text style={styles.label}>Vehicle Name/Model</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter vehicle name"
+          placeholderTextColor="#666"
+          value={vehicle}
+          onChangeText={setVehicle}
+        />
+
+        {/* VIN */}
+        <Text style={styles.label}>VIN (optional)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter VIN number"
+          placeholderTextColor="#666"
+          value={vin}
+          onChangeText={setVin}
+        />
+
+        {/* Odometer */}
+        <Text style={styles.label}>Odometer (optional)</Text>
+        <TextInput
+          style={styles.input}
+          placeholder="Enter odometer reading"
+          placeholderTextColor="#666"
+          value={odometer}
+          onChangeText={setOdometer}
+          keyboardType="numeric"
+        />
+
+        {/* Submit */}
+        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
+          <Text style={styles.buttonText}>Continue</Text>
+        </TouchableOpacity>
+      </ScrollView>
+    </LinearGradient>
   );
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  background: {
-    flex: 1,
-  },
-  scrollView: {
-    flex: 1,
-  },
-  content: {
-    padding: theme.spacing.lg,
-    paddingTop: theme.spacing.xxl * 2,
-  },
+  container: { flex: 1 },
+  content: { padding: 20 },
   header: {
-    alignItems: 'center',
-    marginBottom: theme.spacing.xl,
+    fontSize: 26,
+    fontWeight: "bold",
+    color: "#fff",
+    marginBottom: 10,
+    textAlign: "center",
   },
-  title: {
-    fontSize: theme.typography.fontSizes.xxxl,
-    fontWeight: theme.typography.fontWeights.bold,
-    color: theme.colors.text.light,
-    textAlign: 'center',
-    marginBottom: theme.spacing.sm,
+  subHeader: {
+    fontSize: 15,
+    color: "#aaa",
+    textAlign: "center",
+    marginBottom: 30,
   },
-  subtitle: {
-    fontSize: theme.typography.fontSizes.lg,
-    color: theme.colors.text.light,
-    textAlign: 'center',
-    opacity: 0.8,
+  label: {
+    fontSize: 14,
+    color: "#ccc",
+    marginBottom: 6,
+    marginTop: 16,
   },
-  cardsContainer: {
-    gap: theme.spacing.lg,
+  input: {
+    backgroundColor: "#1a1a1a",
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 15,
+    color: "#fff",
   },
-  card: {
-    minHeight: 200,
+  button: {
+    backgroundColor: "#fff",
+    paddingVertical: 14,
+    borderRadius: 10,
+    marginTop: 30,
+    alignItems: "center",
   },
-  cardContent: {
-    padding: theme.spacing.lg,
-    flex: 1,
-    justifyContent: 'space-between',
-  },
-  cardTitle: {
-    fontSize: theme.typography.fontSizes.xl,
-    fontWeight: theme.typography.fontWeights.bold,
-    color: theme.colors.text.primary,
-    marginBottom: theme.spacing.sm,
-  },
-  cardDescription: {
-    fontSize: theme.typography.fontSizes.md,
-    color: theme.colors.text.secondary,
-    lineHeight: 24,
-    marginBottom: theme.spacing.lg,
-  },
+  buttonText: { color: "#000", fontWeight: "600", fontSize: 16 },
 });
 
-export default HomeScreen;
+export default OnboardingForm;
