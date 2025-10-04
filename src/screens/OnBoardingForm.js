@@ -20,16 +20,17 @@ const OnboardingForm = () => {
   const [odometer, setOdometer] = useState("");
   const [image, setImage] = useState(null);
 
-  const handleImagePick = async () => {
-    const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+  // 📸 Open camera instead of gallery
+  const handleTakePhoto = async () => {
+    const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
-      alert("Permission to access gallery is required!");
+      alert("Camera permission is required!");
       return;
     }
 
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+    const result = await ImagePicker.launchCameraAsync({
       allowsEditing: true,
+      aspect: [4, 3],
       quality: 1,
     });
 
@@ -109,13 +110,13 @@ const OnboardingForm = () => {
           keyboardType="numeric"
         />
 
-        {/* Image Upload Field */}
-        <Text style={styles.label}>Vehicle Image</Text>
-        <TouchableOpacity style={styles.imageBox} onPress={handleImagePick}>
+        {/* Image Capture Field */}
+        <Text style={styles.label}>Vehicle Photo</Text>
+        <TouchableOpacity style={styles.imageBox} onPress={handleTakePhoto}>
           {image ? (
             <Image source={{ uri: image }} style={styles.imagePreview} />
           ) : (
-            <Text style={styles.placeholder}>Tap to upload image</Text>
+            <Text style={styles.placeholder}>Tap to open camera</Text>
           )}
         </TouchableOpacity>
 
