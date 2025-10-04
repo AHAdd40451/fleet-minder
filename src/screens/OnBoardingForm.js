@@ -7,10 +7,13 @@ import {
   StyleSheet,
   ScrollView,
   Image,
+  Alert,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import * as ImagePicker from "expo-image-picker";
+import { supabase } from "../lib/supabase";
+
 
 const OnboardingForm = () => {
   const [companyName, setCompanyName] = useState("");
@@ -19,8 +22,9 @@ const OnboardingForm = () => {
   const [vin, setVin] = useState("");
   const [odometer, setOdometer] = useState("");
   const [image, setImage] = useState(null);
+  const [loading, setLoading] = useState(false);
 
-  // 📸 Open camera instead of gallery
+  // open camera
   const handleTakePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
@@ -39,15 +43,66 @@ const OnboardingForm = () => {
     }
   };
 
-  const handleSubmit = () => {
-    console.log({
-      companyName,
-      state,
-      vehicle,
-      vin,
-      odometer,
-      image,
-    });
+  const handleSubmit = async () => {
+    if (!companyName || !state || !vehicle) {
+      Alert.alert("Missing Info", "Please fill all required fields");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      let uploadedUrl = null;
+
+      // upload image if available
+      if (image) {
+        const imageName = `vehicle-${Date.now()}.jpg`;
+
+        const imageData = await fetch(image);
+        const blob = await imageData.blob();
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("vehicle-images") // make sure this bucket exists
+          .upload(imageName, blob, {
+            contentType: "image/jpeg",
+          });
+
+        if (uploadError) throw uploadError;
+
+        const { data: publicUrl } = supabase.storage
+          .from("vehicle-images")
+          .getPublicUrl(imageName);
+
+        uploadedUrl = publicUrl.publicUrl;
+      }
+
+      // insert data into table
+      const { data, error } = await supabase.from("onboarding").insert([
+        {
+          company_name: companyName,
+          state,
+          vehicle,
+          vin,
+          odometer,
+          image_url: uploadedUrl,
+        },
+      ]);
+
+      if (error) throw error;
+
+      Alert.alert("Success", "Details saved successfully!");
+      setCompanyName("");
+      setState("");
+      setVehicle("");
+      setVin("");
+      setOdometer("");
+      setImage(null);
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Error", error.message || "Failed to save data");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -55,11 +110,8 @@ const OnboardingForm = () => {
       <StatusBar style="light" />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.header}>Quick Setup</Text>
-        <Text style={styles.subHeader}>
-          Fill in your company and vehicle details
-        </Text>
+        <Text style={styles.subHeader}>Fill in your company and vehicle details</Text>
 
-        {/* Company Name */}
         <Text style={styles.label}>Company Name</Text>
         <TextInput
           style={styles.input}
@@ -69,7 +121,6 @@ const OnboardingForm = () => {
           onChangeText={setCompanyName}
         />
 
-        {/* State */}
         <Text style={styles.label}>State</Text>
         <TextInput
           style={styles.input}
@@ -79,7 +130,6 @@ const OnboardingForm = () => {
           onChangeText={setState}
         />
 
-        {/* Vehicle Name */}
         <Text style={styles.label}>Vehicle Name/Model</Text>
         <TextInput
           style={styles.input}
@@ -89,7 +139,6 @@ const OnboardingForm = () => {
           onChangeText={setVehicle}
         />
 
-        {/* VIN */}
         <Text style={styles.label}>VIN (optional)</Text>
         <TextInput
           style={styles.input}
@@ -99,7 +148,6 @@ const OnboardingForm = () => {
           onChangeText={setVin}
         />
 
-        {/* Odometer */}
         <Text style={styles.label}>Odometer (optional)</Text>
         <TextInput
           style={styles.input}
@@ -110,7 +158,6 @@ const OnboardingForm = () => {
           keyboardType="numeric"
         />
 
-        {/* Image Capture Field */}
         <Text style={styles.label}>Vehicle Photo</Text>
         <TouchableOpacity style={styles.imageBox} onPress={handleTakePhoto}>
           {image ? (
@@ -120,9 +167,8 @@ const OnboardingForm = () => {
           )}
         </TouchableOpacity>
 
-        {/* Submit Button */}
-        <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-          <Text style={styles.buttonText}>Continue</Text>
+        <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading}>
+          <Text style={styles.buttonText}>{loading ? "Saving..." : "Continue"}</Text>
         </TouchableOpacity>
       </ScrollView>
     </LinearGradient>
