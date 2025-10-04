@@ -8,12 +8,14 @@ import {
   ScrollView,
   Image,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
 import { StatusBar } from "expo-status-bar";
 import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system/legacy";
+import * as mime from "react-native-mime-types";
 import { supabase } from "../lib/supabase";
-
 
 const OnboardingForm = () => {
   const [companyName, setCompanyName] = useState("");
@@ -24,7 +26,7 @@ const OnboardingForm = () => {
   const [image, setImage] = useState(null);
   const [loading, setLoading] = useState(false);
 
-  // open camera
+  // 📸 open camera
   const handleTakePhoto = async () => {
     const { status } = await ImagePicker.requestCameraPermissionsAsync();
     if (status !== "granted") {
@@ -43,6 +45,41 @@ const OnboardingForm = () => {
     }
   };
 
+  // 🧠 Upload file properly (fixed Base64 encoding)
+  const uploadImageToSupabase = async (fileUri) => {
+    try {
+      const imageName = `vehicle-${Date.now()}.jpg`;
+      const contentType = mime.lookup(fileUri) || "image/jpeg";
+
+      // ✅ Fixed: use plain "base64" string
+      const base64 = await FileSystem.readAsStringAsync(fileUri, {
+        encoding: "base64",
+      });
+
+      // Convert Base64 → binary using Uint8Array (React Native compatible)
+      const binaryString = atob(base64);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+
+      const { data, error } = await supabase.storage
+        .from("vehicle-images")
+        .upload(imageName, bytes, { contentType });
+
+      if (error) throw error;
+
+      const { data: publicUrl } = supabase.storage
+        .from("vehicle-images")
+        .getPublicUrl(imageName);
+
+      return publicUrl.publicUrl;
+    } catch (err) {
+      console.error("Upload failed:", err);
+      throw err;
+    }
+  };
+
   const handleSubmit = async () => {
     if (!companyName || !state || !vehicle) {
       Alert.alert("Missing Info", "Please fill all required fields");
@@ -51,33 +88,13 @@ const OnboardingForm = () => {
 
     try {
       setLoading(true);
-
       let uploadedUrl = null;
 
-      // upload image if available
       if (image) {
-        const imageName = `vehicle-${Date.now()}.jpg`;
-
-        const imageData = await fetch(image);
-        const blob = await imageData.blob();
-
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("vehicle-images") // make sure this bucket exists
-          .upload(imageName, blob, {
-            contentType: "image/jpeg",
-          });
-
-        if (uploadError) throw uploadError;
-
-        const { data: publicUrl } = supabase.storage
-          .from("vehicle-images")
-          .getPublicUrl(imageName);
-
-        uploadedUrl = publicUrl.publicUrl;
+        uploadedUrl = await uploadImageToSupabase(image);
       }
 
-      // insert data into table
-      const { data, error } = await supabase.from("onboarding").insert([
+      const { error } = await supabase.from("onboarding").insert([
         {
           company_name: companyName,
           state,
@@ -110,7 +127,9 @@ const OnboardingForm = () => {
       <StatusBar style="light" />
       <ScrollView contentContainerStyle={styles.content}>
         <Text style={styles.header}>Quick Setup</Text>
-        <Text style={styles.subHeader}>Fill in your company and vehicle details</Text>
+        <Text style={styles.subHeader}>
+          Fill in your company and vehicle details
+        </Text>
 
         <Text style={styles.label}>Company Name</Text>
         <TextInput
@@ -161,14 +180,31 @@ const OnboardingForm = () => {
         <Text style={styles.label}>Vehicle Photo</Text>
         <TouchableOpacity style={styles.imageBox} onPress={handleTakePhoto}>
           {image ? (
-            <Image source={{ uri: image }} style={styles.imagePreview} />
+            <Image
+              source={{ uri: image }}
+              style={styles.imagePreview}
+              resizeMode="cover"
+            />
           ) : (
             <Text style={styles.placeholder}>Tap to open camera</Text>
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading}>
-          <Text style={styles.buttonText}>{loading ? "Saving..." : "Continue"}</Text>
+        {loading && (
+          <ActivityIndicator
+            color="#fff"
+            style={{ marginTop: 15, marginBottom: 10 }}
+          />
+        )}
+
+        <TouchableOpacity
+          style={[styles.button, loading && { opacity: 0.5 }]}
+          onPress={handleSubmit}
+          disabled={loading}
+        >
+          <Text style={styles.buttonText}>
+            {loading ? "Saving..." : "Continue"}
+          </Text>
         </TouchableOpacity>
       </ScrollView>
     </LinearGradient>
@@ -225,7 +261,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     borderRadius: 12,
-    resizeMode: "cover",
   },
   button: {
     backgroundColor: "#fff",
