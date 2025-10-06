@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { requestOtp } from "../../services/otp";
 
 const Step1Company = ({ data, setData, nextStep }) => {
   const [companyName, setCompanyName] = useState(data.name || "");
@@ -7,10 +8,23 @@ const Step1Company = ({ data, setData, nextStep }) => {
   const [country, setCountry] = useState(data.country || "");
   const [state, setState] = useState(data.state || "");
 
-  const handleNext = () => {
-    if (!companyName || !phone || !country || !state) return alert("Fill all fields");
-    setData({ name: companyName, phone, country, state });
-    nextStep();
+  const [sending, setSending] = useState(false);
+
+  const handleNext = async () => {
+    if (!companyName || !phone || !country || !state) return Alert.alert("Missing Info", "Fill all fields");
+    try {
+      setSending(true);
+      const result = await requestOtp(phone);
+      if (!result.ok) {
+        return Alert.alert("OTP Error", result.error || "Failed to send OTP");
+      }
+      setData({ name: companyName, phone, country, state });
+      nextStep();
+    } catch (e) {
+      Alert.alert("OTP Error", e?.message || "Failed to send OTP");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -43,8 +57,8 @@ const Step1Company = ({ data, setData, nextStep }) => {
         onChangeText={setState}
       />
 
-      <TouchableOpacity style={styles.btn} onPress={handleNext}>
-        <Text style={styles.btnText}>Next</Text>
+      <TouchableOpacity style={styles.btn} onPress={handleNext} disabled={sending}>
+        <Text style={styles.btnText}>{sending ? "Sending..." : "Next"}</Text>
       </TouchableOpacity>
     </View>
   );

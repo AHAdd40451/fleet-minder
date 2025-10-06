@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
 import { supabase } from "../../lib/supabase";
+import { verifyOtp } from "../../services/otp";
 
 const Step3OTP = ({ companyData, vehicleData, userData, setUserData, prevStep }) => {
   const [otp, setOtp] = useState("");
@@ -9,6 +10,11 @@ const Step3OTP = ({ companyData, vehicleData, userData, setUserData, prevStep })
   const handleCreate = async () => {
     try {
       setSending(true);
+      // Verify OTP first
+      const result = await verifyOtp(companyData.phone, otp);
+      if (!result.ok) {
+        throw new Error(result.error || "Invalid OTP");
+      }
 
       // 1️⃣ Insert company
       const { data: comp, error: compErr } = await supabase.from("companies").insert({
