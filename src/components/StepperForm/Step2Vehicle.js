@@ -13,6 +13,7 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import Tesseract from "tesseract.js";
+import { validateVIN, validateYear, validateNumeric, validateRequired } from "../../utils/validation";
 
 const Step2Vehicle = ({ data, setData, nextStep, prevStep }) => {
   const [vin, setVin] = useState(data.vin || "");
@@ -24,6 +25,7 @@ const Step2Vehicle = ({ data, setData, nextStep, prevStep }) => {
   const [vinImages, setVinImages] = useState(data.vinImages || []);
   const [meterImages, setMeterImages] = useState(data.meterImages || []);
   const [loading, setLoading] = useState(false);
+  const [errors, setErrors] = useState({});
 
   const pickImages = async (setter, type) => {
     try {
@@ -154,7 +156,60 @@ const Step2Vehicle = ({ data, setData, nextStep, prevStep }) => {
     }
   };
 
+  const validateForm = () => {
+    const newErrors = {};
+    
+    // Validate VIN (optional but if provided, must be valid)
+    if (vin && vin.trim()) {
+      const vinValidation = validateVIN(vin);
+      if (!vinValidation.isValid) {
+        newErrors.vin = vinValidation.message;
+      }
+    }
+    
+    // Validate make (required)
+    const makeValidation = validateRequired(make, "Make");
+    if (!makeValidation.isValid) {
+      newErrors.make = makeValidation.message;
+    }
+    
+    // Validate model (required)
+    const modelValidation = validateRequired(model, "Model");
+    if (!modelValidation.isValid) {
+      newErrors.model = modelValidation.message;
+    }
+    
+    // Validate year (required)
+    const yearValidation = validateYear(year);
+    if (!yearValidation.isValid) {
+      newErrors.year = yearValidation.message;
+    }
+    
+    // Validate mileage (optional but if provided, must be numeric)
+    if (mileage && mileage.trim()) {
+      const mileageValidation = validateNumeric(mileage, "Mileage", 0, 999999);
+      if (!mileageValidation.isValid) {
+        newErrors.mileage = mileageValidation.message;
+      }
+    }
+    
+    // Validate odometer (optional but if provided, must be numeric)
+    if (odometer && odometer.trim()) {
+      const odometerValidation = validateNumeric(odometer, "Odometer", 0, 999999);
+      if (!odometerValidation.isValid) {
+        newErrors.odometer = odometerValidation.message;
+      }
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
   const handleNext = () => {
+    if (!validateForm()) {
+      return;
+    }
+    
     setData({
       vin,
       make,
@@ -172,51 +227,104 @@ const Step2Vehicle = ({ data, setData, nextStep, prevStep }) => {
     <View style={styles.container}>
       <Text style={styles.title}>Vehicle Information</Text>
 
-      <TextInput
-        style={styles.input}
-        placeholder="VIN"
-        placeholderTextColor="#777"
-        value={vin}
-        onChangeText={setVin}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Make"
-        placeholderTextColor="#777"
-        value={make}
-        onChangeText={setMake}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Model"
-        placeholderTextColor="#777"
-        value={model}
-        onChangeText={setModel}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Year"
-        placeholderTextColor="#777"
-        value={year}
-        onChangeText={setYear}
-        keyboardType="numeric"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Mileage"
-        placeholderTextColor="#777"
-        value={mileage}
-        onChangeText={setMileage}
-        keyboardType="numeric"
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Odometer"
-        placeholderTextColor="#777"
-        value={odometer}
-        onChangeText={setOdometer}
-        keyboardType="numeric"
-      />
+      <View>
+        <TextInput
+          style={[styles.input, errors.vin && styles.inputError]}
+          placeholder="VIN (Optional)"
+          placeholderTextColor="#777"
+          value={vin}
+          onChangeText={(text) => {
+            setVin(text);
+            if (errors.vin) {
+              setErrors(prev => ({ ...prev, vin: null }));
+            }
+          }}
+        />
+        {errors.vin && <Text style={styles.errorText}>{errors.vin}</Text>}
+      </View>
+
+      <View>
+        <TextInput
+          style={[styles.input, errors.make && styles.inputError]}
+          placeholder="Make *"
+          placeholderTextColor="#777"
+          value={make}
+          onChangeText={(text) => {
+            setMake(text);
+            if (errors.make) {
+              setErrors(prev => ({ ...prev, make: null }));
+            }
+          }}
+        />
+        {errors.make && <Text style={styles.errorText}>{errors.make}</Text>}
+      </View>
+
+      <View>
+        <TextInput
+          style={[styles.input, errors.model && styles.inputError]}
+          placeholder="Model *"
+          placeholderTextColor="#777"
+          value={model}
+          onChangeText={(text) => {
+            setModel(text);
+            if (errors.model) {
+              setErrors(prev => ({ ...prev, model: null }));
+            }
+          }}
+        />
+        {errors.model && <Text style={styles.errorText}>{errors.model}</Text>}
+      </View>
+
+      <View>
+        <TextInput
+          style={[styles.input, errors.year && styles.inputError]}
+          placeholder="Year *"
+          placeholderTextColor="#777"
+          value={year}
+          onChangeText={(text) => {
+            setYear(text);
+            if (errors.year) {
+              setErrors(prev => ({ ...prev, year: null }));
+            }
+          }}
+          keyboardType="numeric"
+        />
+        {errors.year && <Text style={styles.errorText}>{errors.year}</Text>}
+      </View>
+
+      <View>
+        <TextInput
+          style={[styles.input, errors.mileage && styles.inputError]}
+          placeholder="Mileage (Optional)"
+          placeholderTextColor="#777"
+          value={mileage}
+          onChangeText={(text) => {
+            setMileage(text);
+            if (errors.mileage) {
+              setErrors(prev => ({ ...prev, mileage: null }));
+            }
+          }}
+          keyboardType="numeric"
+        />
+        {errors.mileage && <Text style={styles.errorText}>{errors.mileage}</Text>}
+      </View>
+
+      <View>
+        <TextInput
+          style={[styles.input, errors.odometer && styles.inputError]}
+          placeholder="Odometer (Optional)"
+          placeholderTextColor="#777"
+          value={odometer}
+          onChangeText={(text) => {
+            setOdometer(text);
+            if (errors.odometer) {
+              setErrors(prev => ({ ...prev, odometer: null }));
+            }
+          }}
+          keyboardType="numeric"
+        />
+        {errors.odometer && <Text style={styles.errorText}>{errors.odometer}</Text>}
+      </View>
 
       <View style={styles.imageSection}>
         <Text style={styles.sectionTitle}>VIN Images</Text>
@@ -290,7 +398,19 @@ const styles = StyleSheet.create({
     color: "#fff",
     padding: 12,
     borderRadius: 8,
-    marginBottom: 12,
+    marginBottom: 5,
+    borderWidth: 1,
+    borderColor: "#333",
+  },
+  inputError: {
+    borderColor: "#ff4444",
+    borderWidth: 1,
+  },
+  errorText: {
+    color: "#ff4444",
+    fontSize: 12,
+    marginBottom: 10,
+    marginLeft: 5,
   },
   imageSection: {
     marginVertical: 15,

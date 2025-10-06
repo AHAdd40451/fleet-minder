@@ -6,7 +6,7 @@ import Step2Vehicle from "../components/StepperForm/Step2Vehicle";
 import Step3OTP from "../components/StepperForm/Step3OTP";
 
 
-const OnboardingForm = () => {
+const OnboardingForm = ({ navigation }) => {
   const [step, setStep] = useState(1);
   const [companyData, setCompanyData] = useState({});
   const [vehicleData, setVehicleData] = useState({});
@@ -41,6 +41,7 @@ const OnboardingForm = () => {
           userData={userData}
           setUserData={setUserData}
           prevStep={prevStep}
+          navigation={navigation}
         />
       )}
     </View>
