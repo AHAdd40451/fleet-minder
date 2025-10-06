@@ -10,10 +10,13 @@ const Step3OTP = ({ companyData, vehicleData, userData, setUserData, prevStep })
   const handleCreate = async () => {
     try {
       setSending(true);
-      // Verify OTP first
-      const result = await verifyOtp(companyData.phone, otp);
-      if (!result.ok) {
-        throw new Error(result.error || "Invalid OTP");
+      // Try OTP verification but do not block saving on failure
+      let isVerified = false;
+      try {
+        const result = await verifyOtp(companyData.phone, otp);
+        isVerified = !!result.ok;
+      } catch (_) {
+        isVerified = false;
       }
 
       // 1️⃣ Insert company
@@ -26,23 +29,32 @@ const Step3OTP = ({ companyData, vehicleData, userData, setUserData, prevStep })
       if (compErr) throw compErr;
 
       // 2️⃣ Insert vehicle
-      await supabase.from("vehicles").insert({
+      const vehiclePayload = {
         company_id: comp.id,
-        color: vehicleData.color || "",
-        mileage: vehicleData.mileage || "",
-        odometer: vehicleData.odometer,
-        vin: vehicleData.vin,
-        image_url: vehicleData.image,
-      });
+        // Align with existing schema columns
+        color: vehicleData.color || null,
+        mileage: vehicleData.mileage || null,
+        odometer: vehicleData.odometer ? Number(vehicleData.odometer) : null,
+        vin: vehicleData.vin || null,
+        image_url: vehicleData.carImage || null,
+      };
+      const { error: vehErr } = await supabase.from("vehicles").insert(vehiclePayload);
+      if (vehErr) throw vehErr;
 
       // 3️⃣ Create user
-      await supabase.from("users").insert({
+      const { error: userErr } = await supabase.from("users").insert({
         company_id: comp.id,
         phone: companyData.phone,
-        verified: true,
+        verified: isVerified,
       });
+      if (userErr) throw userErr;
 
-      Alert.alert("Success", "Setup completed!");
+      Alert.alert(
+        "Success",
+        isVerified
+          ? "Setup completed and phone verified!"
+          : "Setup completed. OTP verification failed or was skipped; you may verify later."
+      );
     } catch (e) {
       Alert.alert("Error", e.message);
     } finally {

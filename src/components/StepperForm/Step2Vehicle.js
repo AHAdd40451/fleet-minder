@@ -8,113 +8,169 @@ import {
   StyleSheet,
   ActivityIndicator,
   Alert,
+  Platform,
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
-import * as mime from "react-native-mime-types";
-import { supabase } from "../../lib/supabase";
+import * as FileSystem from "expo-file-system/legacy";
+import Tesseract from "tesseract.js";
 
-const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep }) => {
-  const [vehicle, setVehicle] = useState(data.vehicle || "");
+const Step2Vehicle = ({ data, setData, nextStep, prevStep }) => {
   const [vin, setVin] = useState(data.vin || "");
+  const [make, setMake] = useState(data.make || "");
+  const [model, setModel] = useState(data.model || "");
+  const [year, setYear] = useState(data.year || "");
+  const [mileage, setMileage] = useState(data.mileage || "");
   const [odometer, setOdometer] = useState(data.odometer || "");
-  const [image, setImage] = useState(data.image || null);
+  const [vinImages, setVinImages] = useState(data.vinImages || []);
+  const [meterImages, setMeterImages] = useState(data.meterImages || []);
   const [loading, setLoading] = useState(false);
 
-  // Open camera and capture image
-  const handlePhoto = async () => {
-    const result = await ImagePicker.launchCameraAsync({
-      allowsEditing: true,
-      quality: 0.8,
-    });
-    if (!result.canceled) setImage(result.assets[0].uri);
-  };
-
-  // Test Supabase connection
-  const testSupabaseConnection = async () => {
+  const pickImages = async (setter, type) => {
     try {
-      const { data, error } = await supabase.storage.from("vehicle-images").list();
-      console.log("Storage bucket test:", { data, error });
-      return !error;
-    } catch (e) {
-      console.error("Storage connection test failed:", e);
-      return false;
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: true,
+        quality: 1,
+      });
+      if (!result.canceled) {
+        const newImages = result.assets.map(asset => asset.uri);
+        setter(prev => [...prev, ...newImages]);
+        
+        // Process the first image for OCR if it's a new image
+        if (newImages.length > 0) {
+          const firstImage = newImages[0];
+          if (type === "vin") {
+            await extractVin(firstImage);
+          } else if (type === "meter") {
+            await extractOdometer(firstImage);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error picking images:", err);
+      Alert.alert("Error", "Failed to open image library");
     }
   };
 
-  // Upload logic
-  const handleNext = async () => {
-    if (!vehicle) return Alert.alert("Please enter vehicle name");
-    setLoading(true);
+  const removeImage = (imageUri, setter) => {
+    setter(prev => prev.filter(uri => uri !== imageUri));
+  };
 
-    let imageUrl = null;
+  const getBase64 = async (imageUri) => {
+    if (Platform.OS === "web") {
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      return new Promise((resolve, reject) => {
+        reader.onerror = reject;
+        reader.onload = () => {
+          const dataUrl = reader.result;
+          const base64 = dataUrl.split(",")[1];
+          resolve(base64);
+        };
+        reader.readAsDataURL(blob);
+      });
+    } else {
+      return await FileSystem.readAsStringAsync(imageUri, {
+        encoding: "base64",
+      });
+    }
+  };
 
+  const extractVin = async (imageUri) => {
     try {
-      // Test storage connection first
-      const isConnected = await testSupabaseConnection();
-      if (!isConnected) {
-        throw new Error("Cannot connect to storage bucket");
+      setLoading(true);
+      const b64 = await getBase64(imageUri);
+      const buffer = `data:image/jpeg;base64,${b64}`;
+
+      const { data: { text } } = await Tesseract.recognize(buffer, "eng", {
+        logger: (m) => console.log("VIN OCR:", m),
+        tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+        psm: Tesseract.PSM.SINGLE_LINE,
+      });
+
+      console.log("VIN OCR raw:", text);
+
+      const clean = text.replace(/\s+/g, "").toUpperCase();
+      const vinMatch = clean.match(/[A-HJ-NPR-Z0-9]{17}/);
+      if (vinMatch && vinMatch[0].length === 17) {
+        const detected = vinMatch[0];
+        setVin(detected);
+        Alert.alert("VIN Detected", detected);
       }
 
-      if (image) {
-        const imageName = `vehicle-${Date.now()}.jpg`;
+      const yearMatch = text.match(/20\d{2}|19\d{2}/);
+      if (yearMatch) setYear(yearMatch[0]);
 
-        // Convert local file URI to Blob
-        const response = await fetch(image);
-        const blob = await response.blob();
-        
-        console.log("Blob size:", blob.size);
-        console.log("Blob type:", blob.type);
+      const makeMatch = text.match(
+        /(TOYOTA|HONDA|FORD|CHEVROLET|BMW|NISSAN|TESLA|MERCEDES|HYUNDAI|KIA|VOLKSWAGEN|JEEP|DODGE)/i
+      );
+      if (makeMatch) setMake(makeMatch[0].toUpperCase());
 
-        // Upload to Supabase Storage
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from("vehicle-images")
-          .upload(imageName, blob, {
-            contentType: "image/jpeg",
-            upsert: true,
-          });
-          
-        console.log("Upload data:", uploadData);
-
-        if (uploadError) {
-          console.error("Upload error:", uploadError);
-          throw uploadError;
-        }
-
-        // Get public URL
-        const { data: urlData, error: urlError } = supabase.storage
-          .from("vehicle-images")
-          .getPublicUrl(imageName);
-
-        if (urlError) {
-          console.error("URL error:", urlError);
-          throw urlError;
-        }
-
-        imageUrl = urlData.publicUrl;
-        console.log("Image uploaded successfully:", imageUrl);
-      }
-
-      setData({ vehicle, vin, odometer, image: imageUrl });
-      nextStep();
-    } catch (e) {
-      console.error("Upload failed:", e);
-      Alert.alert("Upload Failed", e?.message || "Unknown error");
+      const modelMatch = text.match(
+        /(CIVIC|COROLLA|CAMRY|F150|MODEL\s?3|ACCORD|ALTIMA|SONATA|TUCSON|GOLF|CHARGER|WRANGLER)/i
+      );
+      if (modelMatch) setModel(modelMatch[0].toUpperCase());
+    } catch (err) {
+      console.error("Error in extractVin:", err);
+      Alert.alert("Error", "Could not read VIN");
     } finally {
       setLoading(false);
     }
   };
 
+  const extractOdometer = async (imageUri) => {
+    try {
+      setLoading(true);
+      const b64 = await getBase64(imageUri);
+      const buffer = `data:image/jpeg;base64,${b64}`;
+
+      const { data: { text } } = await Tesseract.recognize(buffer, "eng", {
+        logger: (m) => console.log("Odometer OCR:", m),
+        tessedit_char_whitelist: "0123456789",
+        psm: Tesseract.PSM.SINGLE_LINE,
+      });
+
+      console.log("Odometer OCR raw:", text);
+
+      const justDigits = text.replace(/\D/g, "");
+      const match = justDigits.match(/\d{4,7}/);
+      if (match) {
+        const reading = match[0];
+        setOdometer(reading);
+        setMileage(reading);
+        Alert.alert("Odometer Detected", reading);
+      } else {
+        Alert.alert(
+          "No Reading Found",
+          "Could not detect a valid odometer value. Try clearer image."
+        );
+      }
+    } catch (err) {
+      console.error("Error in extractOdometer:", err);
+      Alert.alert("Error", "Could not read odometer");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleNext = () => {
+    setData({
+      vin,
+      make,
+      model,
+      year,
+      mileage,
+      odometer,
+      vinImages,
+      meterImages,
+    });
+    nextStep();
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Vehicle Details</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="Vehicle Model"
-        placeholderTextColor="#777"
-        value={vehicle}
-        onChangeText={setVehicle}
-      />
+      <Text style={styles.title}>Vehicle Information</Text>
 
       <TextInput
         style={styles.input}
@@ -123,36 +179,105 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep }) => {
         value={vin}
         onChangeText={setVin}
       />
-
+      <TextInput
+        style={styles.input}
+        placeholder="Make"
+        placeholderTextColor="#777"
+        value={make}
+        onChangeText={setMake}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Model"
+        placeholderTextColor="#777"
+        value={model}
+        onChangeText={setModel}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Year"
+        placeholderTextColor="#777"
+        value={year}
+        onChangeText={setYear}
+        keyboardType="numeric"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Mileage"
+        placeholderTextColor="#777"
+        value={mileage}
+        onChangeText={setMileage}
+        keyboardType="numeric"
+      />
       <TextInput
         style={styles.input}
         placeholder="Odometer"
         placeholderTextColor="#777"
         value={odometer}
         onChangeText={setOdometer}
+        keyboardType="numeric"
       />
 
-      <TouchableOpacity style={styles.imageBox} onPress={handlePhoto}>
-        {image ? (
-          <Image source={{ uri: image }} style={styles.image} />
-        ) : (
-          <Text style={{ color: "#888" }}>Tap to take photo</Text>
+      <View style={styles.imageSection}>
+        <Text style={styles.sectionTitle}>VIN Images</Text>
+        <TouchableOpacity
+          style={styles.addImageButton}
+          onPress={() => pickImages(setVinImages, "vin")}
+        >
+          <Text style={styles.addImageText}>+ Add VIN Images</Text>
+        </TouchableOpacity>
+        {vinImages.length > 0 && (
+          <View style={styles.imageGrid}>
+            {vinImages.map((imageUri, index) => (
+              <View key={index} style={styles.imageContainer}>
+                <Image source={{ uri: imageUri }} style={styles.thumbnail} />
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={() => removeImage(imageUri, setVinImages)}
+                >
+                  <Text style={styles.removeButtonText}>×</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
         )}
-      </TouchableOpacity>
+      </View>
 
-      {loading ? (
-        <ActivityIndicator color="#fff" />
-      ) : (
-        <View style={styles.btnRow}>
-          <TouchableOpacity style={styles.btn} onPress={prevStep}>
-            <Text style={styles.btnText}>Back</Text>
-          </TouchableOpacity>
+      <View style={styles.imageSection}>
+        <Text style={styles.sectionTitle}>Odometer Images</Text>
+        <TouchableOpacity
+          style={styles.addImageButton}
+          onPress={() => pickImages(setMeterImages, "meter")}
+        >
+          <Text style={styles.addImageText}>+ Add Odometer Images</Text>
+        </TouchableOpacity>
+        {meterImages.length > 0 && (
+          <View style={styles.imageGrid}>
+            {meterImages.map((imageUri, index) => (
+              <View key={index} style={styles.imageContainer}>
+                <Image source={{ uri: imageUri }} style={styles.thumbnail} />
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={() => removeImage(imageUri, setMeterImages)}
+                >
+                  <Text style={styles.removeButtonText}>×</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
 
-          <TouchableOpacity style={styles.btn} onPress={handleNext}>
-            <Text style={styles.btnText}>Next</Text>
-          </TouchableOpacity>
-        </View>
-      )}
+      {loading && <ActivityIndicator color="#fff" style={{ marginTop: 10 }} />}
+
+      <View style={styles.buttonsRow}>
+        <TouchableOpacity style={styles.btn} onPress={prevStep}>
+          <Text style={styles.btnText}>Back</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.btn} onPress={handleNext}>
+          <Text style={styles.btnText}>Next</Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -165,18 +290,63 @@ const styles = StyleSheet.create({
     color: "#fff",
     padding: 12,
     borderRadius: 8,
-    marginBottom: 15,
+    marginBottom: 12,
   },
-  imageBox: {
-    height: 150,
-    backgroundColor: "#1a1a1a",
-    justifyContent: "center",
-    alignItems: "center", 
+  imageSection: {
+    marginVertical: 15,
+  },
+  sectionTitle: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+    marginBottom: 10,
+  },
+  addImageButton: {
+    backgroundColor: "#333",
+    padding: 15,
     borderRadius: 8,
-    marginBottom: 15,
+    alignItems: "center",
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "#555",
+    borderStyle: "dashed",
   },
-  image: { width: "100%", height: "100%", borderRadius: 8 },
-  btnRow: { flexDirection: "row", justifyContent: "space-between" },
+  addImageText: {
+    color: "#fff",
+    fontSize: 14,
+  },
+  imageGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  imageContainer: {
+    position: "relative",
+    width: 80,
+    height: 80,
+    marginBottom: 10,
+  },
+  thumbnail: {
+    width: "100%",
+    height: "100%",
+    borderRadius: 8,
+  },
+  removeButton: {
+    position: "absolute",
+    top: -5,
+    right: -5,
+    backgroundColor: "#ff4444",
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  removeButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
   btn: {
     backgroundColor: "#fff",
     padding: 15,
@@ -184,6 +354,11 @@ const styles = StyleSheet.create({
     width: "48%",
   },
   btnText: { textAlign: "center", color: "#000", fontWeight: "bold" },
+  buttonsRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    marginTop: 20,
+  },
 });
 
 export default Step2Vehicle;
