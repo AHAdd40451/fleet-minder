@@ -1,5 +1,7 @@
-import React, { useState } from "react";
-import { View, StyleSheet } from "react-native";
+import React, { useState, useEffect } from "react";
+import { View, StyleSheet, ActivityIndicator } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import StepIndicator from "../components/StepperForm/StepIndicator";
 import Step1Company from "../components/StepperForm/Step1Company";
 import Step2Vehicle from "../components/StepperForm/Step2Vehicle";
@@ -11,9 +13,35 @@ const OnboardingForm = ({ navigation }) => {
   const [companyData, setCompanyData] = useState({});
   const [vehicleData, setVehicleData] = useState({});
   const [userData, setUserData] = useState({});
+  const [checking, setChecking] = useState(true);
 
   const nextStep = () => setStep((prev) => prev + 1);
   const prevStep = () => setStep((prev) => prev - 1);
+
+  useFocusEffect(
+    React.useCallback(() => {
+      let active = true;
+      (async () => {
+        try {
+          const flag = await AsyncStorage.getItem("isOnboardingComplete");
+          if (active && flag === "true") {
+            navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+            return;
+          }
+        } catch (_) {}
+        if (active) setChecking(false);
+      })();
+      return () => { active = false; };
+    }, [navigation])
+  );
+
+  if (checking) {
+    return (
+      <View style={{ flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' }}>
+        <ActivityIndicator color="#fff" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>

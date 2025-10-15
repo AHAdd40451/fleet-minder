@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../../lib/supabase";
 import { verifyOtp } from "../../services/otp";
 import { validateOTP } from "../../utils/validation";
@@ -34,7 +35,9 @@ const Step3OTP = ({ companyData, vehicleData, userData, setUserData, prevStep, n
       try {
         const result = await verifyOtp(companyData.phone, otp);
         isVerified = !!result.ok;
-      } catch (_) {
+        console.log('OTP verification result:', result);
+      } catch (error) {
+        console.log('OTP verification error:', error);
         isVerified = false;
       }
 
@@ -65,29 +68,41 @@ const Step3OTP = ({ companyData, vehicleData, userData, setUserData, prevStep, n
         company_id: comp.id,
         phone: companyData.phone,
         verified: isVerified,
+        is_onboarding_complete: true, // Always mark as complete after successful form submission
       });
       if (userErr) throw userErr;
 
+      // Persist local gate so user skips onboarding next app launch
+      // Always set this since onboarding is complete regardless of OTP verification
+      try { 
+        await AsyncStorage.setItem("isOnboardingComplete", "true"); 
+      } catch (_) {}
+
       // Direct navigation after successful creation
       console.log('User creation successful, navigating to Home...');
-      setTimeout(() => {
-        navigation.navigate('Home');
-      }, 1000);
+      navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
       
       Alert.alert(
         "Success",
         isVerified
           ? "Setup completed and phone verified!"
           : "Setup completed. OTP verification failed or was skipped; you may verify later.",
-        [
-          {
-            text: "Continue",
-            onPress: () => {
-              console.log('Navigating to Home screen...');
-              navigation.navigate('Home');
-            }
-          }
-        ]
+        isVerified
+          ? [
+              {
+                text: "Continue",
+                onPress: () => {
+                  console.log('Navigating to Home screen...');
+                  navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+                }
+              }
+            ]
+          : [
+              {
+                text: "OK",
+                onPress: () => {}
+              }
+            ]
       );
     } catch (e) {
       Alert.alert("Error", e.message);
