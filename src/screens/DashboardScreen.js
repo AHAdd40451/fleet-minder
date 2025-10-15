@@ -8,10 +8,13 @@ import {
   Image, 
   Alert,
   RefreshControl,
-  ActivityIndicator 
+  ActivityIndicator,
+  Dimensions 
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+
+const { width } = Dimensions.get('window');
 
 const DashboardScreen = ({ navigation }) => {
   const [companyData, setCompanyData] = useState(null);
@@ -159,118 +162,190 @@ const DashboardScreen = ({ navigation }) => {
 
       {/* Company Information Card */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Company Information</Text>
+        <View style={styles.cardHeader}>
+          <View style={styles.cardIconContainer}>
+            <Text style={styles.cardIcon}>🏢</Text>
+          </View>
+          <Text style={styles.cardTitle}>Company Information</Text>
+        </View>
         {companyData ? (
           <View style={styles.infoContainer}>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Company Name:</Text>
+              <View style={styles.infoLabelContainer}>
+                <Text style={styles.infoIcon}>📋</Text>
+                <Text style={styles.label}>Company Name</Text>
+              </View>
               <Text style={styles.value}>{companyData.name || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Phone:</Text>
+              <View style={styles.infoLabelContainer}>
+                <Text style={styles.infoIcon}>📞</Text>
+                <Text style={styles.label}>Phone</Text>
+              </View>
               <Text style={styles.value}>{companyData.phone || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Country:</Text>
+              <View style={styles.infoLabelContainer}>
+                <Text style={styles.infoIcon}>🌍</Text>
+                <Text style={styles.label}>Country</Text>
+              </View>
               <Text style={styles.value}>{companyData.country || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>State:</Text>
+              <View style={styles.infoLabelContainer}>
+                <Text style={styles.infoIcon}>📍</Text>
+                <Text style={styles.label}>State</Text>
+              </View>
               <Text style={styles.value}>{companyData.state || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Created:</Text>
+              <View style={styles.infoLabelContainer}>
+                <Text style={styles.infoIcon}>📅</Text>
+                <Text style={styles.label}>Created</Text>
+              </View>
               <Text style={styles.value}>{formatDate(companyData.created_at)}</Text>
             </View>
           </View>
         ) : (
-          <Text style={styles.noDataText}>No company data available</Text>
+          <View style={styles.noDataContainer}>
+            <Text style={styles.noDataIcon}>📭</Text>
+            <Text style={styles.noDataText}>No company data available</Text>
+          </View>
         )}
       </View>
 
       {/* Vehicle Information Card */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Vehicle Information</Text>
+        <View style={styles.cardHeader}>
+          <View style={styles.cardIconContainer}>
+            <Text style={styles.cardIcon}>🚗</Text>
+          </View>
+          <Text style={styles.cardTitle}>Vehicle Information</Text>
+        </View>
         {vehicleData ? (
           <View style={styles.infoContainer}>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>VIN:</Text>
+              <View style={styles.infoLabelContainer}>
+                <Text style={styles.infoIcon}>🔢</Text>
+                <Text style={styles.label}>VIN</Text>
+              </View>
               <Text style={styles.value}>{vehicleData.vin || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Make:</Text>
+              <View style={styles.infoLabelContainer}>
+                <Text style={styles.infoIcon}>🏭</Text>
+                <Text style={styles.label}>Make</Text>
+              </View>
               <Text style={styles.value}>{vehicleData.make || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Model:</Text>
+              <View style={styles.infoLabelContainer}>
+                <Text style={styles.infoIcon}>🚙</Text>
+                <Text style={styles.label}>Model</Text>
+              </View>
               <Text style={styles.value}>{vehicleData.model || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Year:</Text>
+              <View style={styles.infoLabelContainer}>
+                <Text style={styles.infoIcon}>📅</Text>
+                <Text style={styles.label}>Year</Text>
+              </View>
               <Text style={styles.value}>{vehicleData.year || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Mileage:</Text>
+              <View style={styles.infoLabelContainer}>
+                <Text style={styles.infoIcon}>🛣️</Text>
+                <Text style={styles.label}>Mileage</Text>
+              </View>
               <Text style={styles.value}>{vehicleData.mileage || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Odometer:</Text>
+              <View style={styles.infoLabelContainer}>
+                <Text style={styles.infoIcon}>📊</Text>
+                <Text style={styles.label}>Odometer</Text>
+              </View>
               <Text style={styles.value}>{vehicleData.odometer || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Color:</Text>
+              <View style={styles.infoLabelContainer}>
+                <Text style={styles.infoIcon}>🎨</Text>
+                <Text style={styles.label}>Color</Text>
+              </View>
               <Text style={styles.value}>{vehicleData.color || 'N/A'}</Text>
             </View>
             {vehicleData.image_url && (
               <View style={styles.imageContainer}>
-                <Text style={styles.label}>Vehicle Image:</Text>
+                <View style={styles.infoLabelContainer}>
+                  <Text style={styles.infoIcon}>📸</Text>
+                  <Text style={styles.label}>Vehicle Image</Text>
+                </View>
                 <Image source={{ uri: vehicleData.image_url }} style={styles.vehicleImage} />
               </View>
             )}
           </View>
         ) : (
-          <Text style={styles.noDataText}>No vehicle data available</Text>
+          <View style={styles.noDataContainer}>
+            <Text style={styles.noDataIcon}>🚫</Text>
+            <Text style={styles.noDataText}>No vehicle data available</Text>
+          </View>
         )}
       </View>
 
       {/* User Status Card */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Account Status</Text>
+        <View style={styles.cardHeader}>
+          <View style={styles.cardIconContainer}>
+            <Text style={styles.cardIcon}>👤</Text>
+          </View>
+          <Text style={styles.cardTitle}>Account Status</Text>
+        </View>
         {userData ? (
           <View style={styles.infoContainer}>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Phone Verified:</Text>
+              <View style={styles.infoLabelContainer}>
+                <Text style={styles.infoIcon}>✅</Text>
+                <Text style={styles.label}>Phone Verified</Text>
+              </View>
               <View style={styles.statusContainer}>
                 <View style={[
                   styles.statusBadge, 
-                  { backgroundColor: userData.verified ? '#4CAF50' : '#FF9800' }
+                  { backgroundColor: userData.verified ? '#00E676' : '#FF6B35' }
                 ]}>
                   <Text style={styles.statusText}>
-                    {userData.verified ? 'Verified' : 'Pending'}
+                    {userData.verified ? '✓ Verified' : '⏳ Pending'}
                   </Text>
                 </View>
               </View>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Onboarding Complete:</Text>
+              <View style={styles.infoLabelContainer}>
+                <Text style={styles.infoIcon}>📝</Text>
+                <Text style={styles.label}>Onboarding</Text>
+              </View>
               <View style={styles.statusContainer}>
                 <View style={[
                   styles.statusBadge, 
-                  { backgroundColor: userData.is_onboarding_complete ? '#4CAF50' : '#FF9800' }
+                  { backgroundColor: userData.is_onboarding_complete ? '#00E676' : '#FF6B35' }
                 ]}>
                   <Text style={styles.statusText}>
-                    {userData.is_onboarding_complete ? 'Complete' : 'Incomplete'}
+                    {userData.is_onboarding_complete ? '✓ Complete' : '⏳ Incomplete'}
                   </Text>
                 </View>
               </View>
             </View>
             <View style={styles.infoRow}>
-              <Text style={styles.label}>Account Created:</Text>
+              <View style={styles.infoLabelContainer}>
+                <Text style={styles.infoIcon}>📅</Text>
+                <Text style={styles.label}>Account Created</Text>
+              </View>
               <Text style={styles.value}>{formatDate(userData.created_at)}</Text>
             </View>
           </View>
         ) : (
-          <Text style={styles.noDataText}>No user data available</Text>
+          <View style={styles.noDataContainer}>
+            <Text style={styles.noDataIcon}>👤</Text>
+            <Text style={styles.noDataText}>No user data available</Text>
+          </View>
         )}
       </View>
 
@@ -280,14 +355,20 @@ const DashboardScreen = ({ navigation }) => {
           style={styles.actionButton}
           onPress={() => navigation.navigate('Onboarding')}
         >
-          <Text style={styles.actionButtonText}>Edit Information</Text>
+          <View style={styles.buttonContent}>
+            <Text style={styles.buttonIcon}>✏️</Text>
+            <Text style={styles.actionButtonText}>Edit Information</Text>
+          </View>
         </TouchableOpacity>
         
         <TouchableOpacity 
           style={[styles.actionButton, styles.secondaryButton]}
           onPress={onRefresh}
         >
-          <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>Refresh Data</Text>
+          <View style={styles.buttonContent}>
+            <Text style={styles.buttonIcon}>🔄</Text>
+            <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>Refresh Data</Text>
+          </View>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -297,11 +378,11 @@ const DashboardScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#0a0a0a',
   },
   loadingContainer: {
     flex: 1,
-    backgroundColor: '#000',
+    backgroundColor: '#0a0a0a',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -309,6 +390,7 @@ const styles = StyleSheet.create({
     color: '#fff',
     marginTop: 10,
     fontSize: 16,
+    fontWeight: '500',
   },
   header: {
     flexDirection: 'row',
@@ -316,108 +398,191 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     padding: 20,
     paddingTop: 50,
+    backgroundColor: 'rgba(0,0,0,0.3)',
+    backdropFilter: 'blur(10px)',
   },
   title: {
-    fontSize: 28,
-    fontWeight: 'bold',
+    fontSize: 32,
+    fontWeight: '800',
     color: '#fff',
+    letterSpacing: 0.5,
   },
   logoutButton: {
-    backgroundColor: '#ff4444',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 6,
+    backgroundColor: 'rgba(255, 68, 68, 0.9)',
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderRadius: 25,
+    shadowColor: '#ff4444',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   logoutText: {
     color: '#fff',
     fontWeight: 'bold',
+    fontSize: 14,
   },
   card: {
-    backgroundColor: '#111',
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     margin: 15,
     padding: 20,
-    borderRadius: 12,
+    borderRadius: 20,
     borderWidth: 1,
-    borderColor: '#333',
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.3,
+    shadowRadius: 16,
+    elevation: 12,
+    backdropFilter: 'blur(20px)',
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 20,
+    paddingBottom: 15,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  cardIconContainer: {
+    width: 50,
+    height: 50,
+    borderRadius: 25,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 15,
+  },
+  cardIcon: {
+    fontSize: 24,
   },
   cardTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
+    fontSize: 22,
+    fontWeight: '700',
     color: '#fff',
-    marginBottom: 15,
-    borderBottomWidth: 1,
-    borderBottomColor: '#333',
-    paddingBottom: 10,
+    letterSpacing: 0.3,
+    flex: 1,
   },
   infoContainer: {
-    gap: 12,
+    gap: 16,
   },
   infoRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 5,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
+  },
+  infoLabelContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  infoIcon: {
+    fontSize: 16,
+    marginRight: 8,
   },
   label: {
-    color: '#ccc',
-    fontSize: 16,
+    color: '#b0b0b0',
+    fontSize: 15,
     fontWeight: '500',
     flex: 1,
   },
   value: {
     color: '#fff',
-    fontSize: 16,
-    flex: 2,
+    fontSize: 15,
+    fontWeight: '600',
+    flex: 1.5,
     textAlign: 'right',
   },
   statusContainer: {
-    flex: 2,
+    flex: 1.5,
     alignItems: 'flex-end',
   },
   statusBadge: {
-    paddingHorizontal: 12,
-    paddingVertical: 4,
-    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 6,
+    borderRadius: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
+    elevation: 4,
   },
   statusText: {
     color: '#fff',
     fontSize: 12,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    letterSpacing: 0.3,
+  },
+  noDataContainer: {
+    alignItems: 'center',
+    paddingVertical: 30,
+  },
+  noDataIcon: {
+    fontSize: 48,
+    marginBottom: 10,
+    opacity: 0.6,
   },
   noDataText: {
     color: '#888',
     fontSize: 16,
     textAlign: 'center',
     fontStyle: 'italic',
+    fontWeight: '500',
   },
   imageContainer: {
-    marginTop: 10,
+    marginTop: 15,
+    padding: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.05)',
   },
   vehicleImage: {
     width: '100%',
     height: 200,
-    borderRadius: 8,
+    borderRadius: 12,
     marginTop: 10,
   },
   actionsContainer: {
     padding: 20,
-    gap: 15,
+    gap: 16,
   },
   actionButton: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.9)',
+    padding: 18,
+    borderRadius: 16,
     alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  buttonContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  buttonIcon: {
+    fontSize: 18,
+    marginRight: 10,
   },
   actionButtonText: {
     color: '#000',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '700',
+    letterSpacing: 0.3,
   },
   secondaryButton: {
-    backgroundColor: 'transparent',
-    borderWidth: 1,
-    borderColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.3)',
   },
   secondaryButtonText: {
     color: '#fff',
