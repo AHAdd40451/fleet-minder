@@ -3,6 +3,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import HomeScreen from '../screens/HomeScreen';
 import OnboardingForm from '../screens/OnBoardingForm';
+import DashboardScreen from '../screens/DashboardScreen';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { View, ActivityIndicator } from 'react-native';
 
@@ -15,7 +16,7 @@ export default function Routes() {
     (async () => {
       try {
         const localFlag = await AsyncStorage.getItem('isOnboardingComplete');
-        setInitialRoute(localFlag === 'true' ? 'Home' : 'Onboarding');
+        setInitialRoute(localFlag === 'true' ? 'Dashboard' : 'Onboarding');
       } catch (_) {
         setInitialRoute('Onboarding');
       }
@@ -40,6 +41,7 @@ export default function Routes() {
       >
         <Stack.Screen name="Onboarding" component={OnboardingForm} />
         <Stack.Screen name="Home" component={HomeScreen} />
+        <Stack.Screen name="Dashboard" component={DashboardScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

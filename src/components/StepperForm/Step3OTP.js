@@ -75,12 +75,13 @@ const Step3OTP = ({ companyData, vehicleData, userData, setUserData, prevStep, n
       // Persist local gate so user skips onboarding next app launch
       // Always set this since onboarding is complete regardless of OTP verification
       try { 
-        await AsyncStorage.setItem("isOnboardingComplete", "true"); 
+        await AsyncStorage.setItem("isOnboardingComplete", "true");
+        await AsyncStorage.setItem("userPhone", companyData.phone);
       } catch (_) {}
 
       // Direct navigation after successful creation
-      console.log('User creation successful, navigating to Home...');
-      navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+      console.log('User creation successful, navigating to Dashboard...');
+      navigation.reset({ index: 0, routes: [{ name: 'Dashboard' }] });
       
       Alert.alert(
         "Success",
@@ -92,8 +93,8 @@ const Step3OTP = ({ companyData, vehicleData, userData, setUserData, prevStep, n
               {
                 text: "Continue",
                 onPress: () => {
-                  console.log('Navigating to Home screen...');
-                  navigation.reset({ index: 0, routes: [{ name: 'Home' }] });
+                  console.log('Navigating to Dashboard screen...');
+                  navigation.reset({ index: 0, routes: [{ name: 'Dashboard' }] });
                 }
               }
             ]

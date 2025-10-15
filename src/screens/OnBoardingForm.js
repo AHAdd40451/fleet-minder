@@ -25,7 +25,7 @@ const OnboardingForm = ({ navigation }) => {
         try {
           const flag = await AsyncStorage.getItem("isOnboardingComplete");
           if (active && flag === "true") {
-            navigation.reset({ index: 0, routes: [{ name: "Home" }] });
+            navigation.reset({ index: 0, routes: [{ name: "Dashboard" }] });
             return;
           }
         } catch (_) {}
