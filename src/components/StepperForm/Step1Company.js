@@ -1,6 +1,5 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { requestOtp } from "../../services/otp";
 import { validatePhone, validateRequired } from "../../utils/validation";
 
 const Step1Company = ({ data, setData, nextStep }) => {
@@ -9,7 +8,6 @@ const Step1Company = ({ data, setData, nextStep }) => {
   const [country, setCountry] = useState(data.country || "");
   const [state, setState] = useState(data.state || "");
 
-  const [sending, setSending] = useState(false);
   const [errors, setErrors] = useState({});
 
   const validateForm = () => {
@@ -43,24 +41,13 @@ const Step1Company = ({ data, setData, nextStep }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = async () => {
+  const handleNext = () => {
     if (!validateForm()) {
       return;
     }
     
-    try {
-      setSending(true);
-      const result = await requestOtp(phone);
-      if (!result.ok) {
-        return Alert.alert("OTP Error", result.error || "Failed to send OTP");
-      }
-      setData({ name: companyName, phone, country, state });
-      nextStep();
-    } catch (e) {
-      Alert.alert("OTP Error", e?.message || "Failed to send OTP");
-    } finally {
-      setSending(false);
-    }
+    setData({ name: companyName, phone, country, state });
+    nextStep();
   };
 
   return (
@@ -128,8 +115,8 @@ const Step1Company = ({ data, setData, nextStep }) => {
         {errors.state && <Text style={styles.errorText}>{errors.state}</Text>}
       </View>
 
-      <TouchableOpacity style={styles.btn} onPress={handleNext} disabled={sending}>
-        <Text style={styles.btnText}>{sending ? "Sending..." : "Next"}</Text>
+      <TouchableOpacity style={styles.btn} onPress={handleNext}>
+        <Text style={styles.btnText}>Next</Text>
       </TouchableOpacity>
     </View>
   );
