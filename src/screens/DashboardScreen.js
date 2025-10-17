@@ -231,48 +231,61 @@ const DashboardScreen = ({ navigation }) => {
               </View>
               <Text style={styles.value}>{vehicleData.vin || 'N/A'}</Text>
             </View>
-            <View style={styles.infoRow}>
-              <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>🏭</Text>
-                <Text style={styles.label}>Make</Text>
+            {/* Vehicle details - only show if columns exist */}
+            {vehicleData.make && (
+              <View style={styles.infoRow}>
+                <View style={styles.infoLabelContainer}>
+                  <Text style={styles.infoIcon}>🏭</Text>
+                  <Text style={styles.label}>Make</Text>
+                </View>
+                <Text style={styles.value}>{vehicleData.make || 'N/A'}</Text>
               </View>
-              <Text style={styles.value}>{vehicleData.make || 'N/A'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>🚙</Text>
-                <Text style={styles.label}>Model</Text>
+            )}
+            {vehicleData.model && (
+              <View style={styles.infoRow}>
+                <View style={styles.infoLabelContainer}>
+                  <Text style={styles.infoIcon}>🚙</Text>
+                  <Text style={styles.label}>Model</Text>
+                </View>
+                <Text style={styles.value}>{vehicleData.model || 'N/A'}</Text>
               </View>
-              <Text style={styles.value}>{vehicleData.model || 'N/A'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>📅</Text>
-                <Text style={styles.label}>Year</Text>
+            )}
+            {vehicleData.year && (
+              <View style={styles.infoRow}>
+                <View style={styles.infoLabelContainer}>
+                  <Text style={styles.infoIcon}>📅</Text>
+                  <Text style={styles.label}>Year</Text>
+                </View>
+                <Text style={styles.value}>{vehicleData.year || 'N/A'}</Text>
               </View>
-              <Text style={styles.value}>{vehicleData.year || 'N/A'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>🛣️</Text>
-                <Text style={styles.label}>Mileage</Text>
+            )}
+            {vehicleData.mileage && (
+              <View style={styles.infoRow}>
+                <View style={styles.infoLabelContainer}>
+                  <Text style={styles.infoIcon}>🛣️</Text>
+                  <Text style={styles.label}>Mileage</Text>
+                </View>
+                <Text style={styles.value}>{vehicleData.mileage || 'N/A'}</Text>
               </View>
-              <Text style={styles.value}>{vehicleData.mileage || 'N/A'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>📊</Text>
-                <Text style={styles.label}>Odometer</Text>
+            )}
+            {vehicleData.odometer && (
+              <View style={styles.infoRow}>
+                <View style={styles.infoLabelContainer}>
+                  <Text style={styles.infoIcon}>📊</Text>
+                  <Text style={styles.label}>Odometer</Text>
+                </View>
+                <Text style={styles.value}>{vehicleData.odometer || 'N/A'}</Text>
               </View>
-              <Text style={styles.value}>{vehicleData.odometer || 'N/A'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>🎨</Text>
-                <Text style={styles.label}>Color</Text>
+            )}
+            {vehicleData.color && (
+              <View style={styles.infoRow}>
+                <View style={styles.infoLabelContainer}>
+                  <Text style={styles.infoIcon}>🎨</Text>
+                  <Text style={styles.label}>Color</Text>
+                </View>
+                <Text style={styles.value}>{vehicleData.color || 'N/A'}</Text>
               </View>
-              <Text style={styles.value}>{vehicleData.color || 'N/A'}</Text>
-            </View>
+            )}
             {vehicleData.image_url && (
               <View style={styles.imageContainer}>
                 <View style={styles.infoLabelContainer}>

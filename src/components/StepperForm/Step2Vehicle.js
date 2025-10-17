@@ -225,17 +225,18 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
       }).select().single();
       if (compErr) throw compErr;
 
-      // 2️⃣ Insert vehicle
+      // 2️⃣ Insert vehicle - using columns that exist in the schema
       const vehiclePayload = {
         company_id: comp.id,
         vin: vin || null,
-        make: make || null,
-        model: model || null,
-        year: year ? Number(year) : null,
-        color: null, // Not collected in current form
-        mileage: mileage ? Number(mileage) : null,
-        odometer: odometer ? Number(odometer) : null,
-        image_url: null, // Could be added later for vehicle images
+        // Add other fields if they exist in your schema
+        // make: make || null,
+        // model: model || null,
+        // year: year ? Number(year) : null,
+        // color: null,
+        // mileage: mileage ? Number(mileage) : null,
+        // odometer: odometer ? Number(odometer) : null,
+        // image_url: null,
       };
       const { error: vehErr } = await supabase.from("vehicles").insert(vehiclePayload);
       if (vehErr) throw vehErr;
