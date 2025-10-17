@@ -105,11 +105,20 @@ export const verifyOtp = async (phone, code) => {
     };
   }
 
-  // User exists
-  return { 
-    ok: true, 
-    userExists: true, 
-    user: userData,
-    redirectTo: 'dashboard'
-  };
+  // User exists - check onboarding status
+  if (userData.is_onboarding_complete) {
+    return { 
+      ok: true, 
+      userExists: true, 
+      user: userData,
+      redirectTo: 'dashboard'
+    };
+  } else {
+    return { 
+      ok: true, 
+      userExists: true, 
+      user: userData,
+      redirectTo: 'onboarding'
+    };
+  }
 };

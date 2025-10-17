@@ -49,11 +49,11 @@ const VerifyOtp = ({ navigation, route }) => {
 
       // Route based on verification result
       if (verifyResult.redirectTo === 'dashboard') {
-        // Existing user - go to Dashboard
+        // Existing user with completed onboarding - go to Dashboard
         await AsyncStorage.setItem('isOnboardingComplete', 'true');
         navigation.reset({ index: 0, routes: [{ name: 'Dashboard' }] });
       } else if (verifyResult.redirectTo === 'onboarding') {
-        // New user - go to Onboarding
+        // New user or existing user without completed onboarding - go to Onboarding
         await AsyncStorage.setItem('isOnboardingComplete', 'false');
         navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] });
       }

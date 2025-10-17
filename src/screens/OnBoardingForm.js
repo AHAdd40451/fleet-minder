@@ -22,12 +22,28 @@ const OnboardingForm = ({ navigation }) => {
       let active = true;
       (async () => {
         try {
-          const flag = await AsyncStorage.getItem("isOnboardingComplete");
-          if (active && flag === "true") {
+          const userId = await AsyncStorage.getItem('userId');
+          const isOnboardingComplete = await AsyncStorage.getItem("isOnboardingComplete");
+          
+          if (!userId) {
+            // No user ID, redirect to sign in
+            if (active) {
+              navigation.reset({ index: 0, routes: [{ name: "SignIn" }] });
+            }
+            return;
+          }
+          
+          if (active && isOnboardingComplete === "true") {
+            // Onboarding already complete, go to dashboard
             navigation.reset({ index: 0, routes: [{ name: "Dashboard" }] });
             return;
           }
-        } catch (_) {}
+        } catch (error) {
+          console.error('Onboarding check error:', error);
+          if (active) {
+            navigation.reset({ index: 0, routes: [{ name: "SignIn" }] });
+          }
+        }
         if (active) setChecking(false);
       })();
       return () => { active = false; };

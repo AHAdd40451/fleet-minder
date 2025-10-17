@@ -140,8 +140,38 @@ const DashboardScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
-    fetchUserData();
+    checkAuthAndFetchData();
   }, []);
+
+  const checkAuthAndFetchData = async () => {
+    try {
+      // Check if user is authenticated
+      const userId = await AsyncStorage.getItem('userId');
+      const isOnboardingComplete = await AsyncStorage.getItem('isOnboardingComplete');
+      
+      if (!userId || isOnboardingComplete !== 'true') {
+        // User is not properly authenticated or onboarding not complete
+        // Clear any stale data and redirect to appropriate screen
+        await AsyncStorage.removeItem('isOnboardingComplete');
+        await AsyncStorage.removeItem('userPhone');
+        await AsyncStorage.removeItem('userId');
+        
+        if (isOnboardingComplete === 'false') {
+          navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] });
+        } else {
+          navigation.reset({ index: 0, routes: [{ name: 'SignIn' }] });
+        }
+        return;
+      }
+      
+      // User is authenticated, fetch data
+      await fetchUserData();
+    } catch (error) {
+      console.error('Auth check error:', error);
+      // On error, redirect to sign in
+      navigation.reset({ index: 0, routes: [{ name: 'SignIn' }] });
+    }
+  };
 
   const onRefresh = () => {
     setRefreshing(true);
@@ -214,12 +244,16 @@ const DashboardScreen = ({ navigation }) => {
           style: 'destructive',
           onPress: async () => {
             try {
+              // Clear all stored authentication data
               await AsyncStorage.removeItem('isOnboardingComplete');
               await AsyncStorage.removeItem('userPhone');
               await AsyncStorage.removeItem('userId');
-              navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] });
+              
+              // Navigate to SignIn screen
+              navigation.reset({ index: 0, routes: [{ name: 'SignIn' }] });
             } catch (error) {
               console.error('Logout error:', error);
+              Alert.alert('Error', 'Failed to logout. Please try again.');
             }
           }
         }
