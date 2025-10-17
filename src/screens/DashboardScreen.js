@@ -9,7 +9,9 @@ import {
   Alert,
   RefreshControl,
   ActivityIndicator,
-  Dimensions 
+  Dimensions,
+  Modal,
+  TextInput
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -22,6 +24,13 @@ const DashboardScreen = ({ navigation }) => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    country: '',
+    state: ''
+  });
+  const [editLoading, setEditLoading] = useState(false);
 
   const fetchUserData = async () => {
     try {
@@ -139,6 +148,61 @@ const DashboardScreen = ({ navigation }) => {
     fetchUserData();
   };
 
+  const openEditModal = () => {
+    if (companyData) {
+      setEditFormData({
+        name: companyData.name || '',
+        country: companyData.country || '',
+        state: companyData.state || ''
+      });
+      setEditModalVisible(true);
+    }
+  };
+
+  const handleEditSave = async () => {
+    if (!editFormData.name.trim() || !editFormData.country.trim() || !editFormData.state.trim()) {
+      Alert.alert('Error', 'All fields are required');
+      return;
+    }
+
+    try {
+      setEditLoading(true);
+      
+      const storedUserId = await AsyncStorage.getItem('userId');
+      if (!storedUserId) {
+        Alert.alert('Error', 'User not found. Please sign in again.');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('companies')
+        .update({
+          name: editFormData.name.trim(),
+          country: editFormData.country.trim(),
+          state: editFormData.state.trim()
+        })
+        .eq('user_id', storedUserId);
+
+      if (error) throw error;
+
+      // Update local state
+      setCompanyData(prev => ({
+        ...prev,
+        name: editFormData.name.trim(),
+        country: editFormData.country.trim(),
+        state: editFormData.state.trim()
+      }));
+
+      setEditModalVisible(false);
+      Alert.alert('Success', 'Company information updated successfully!');
+    } catch (error) {
+      console.error('Error updating company:', error);
+      Alert.alert('Error', 'Failed to update company information. Please try again.');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
   const handleLogout = async () => {
     Alert.alert(
       'Logout',
@@ -198,6 +262,11 @@ const DashboardScreen = ({ navigation }) => {
             <Text style={styles.cardIcon}>🏢</Text>
           </View>
           <Text style={styles.cardTitle}>Company Information</Text>
+          {companyData && (
+            <TouchableOpacity style={styles.editButton} onPress={openEditModal}>
+              <Text style={styles.editButtonText}>✏️ Edit</Text>
+            </TouchableOpacity>
+          )}
         </View>
         {companyData ? (
           <View style={styles.infoContainer}>
@@ -415,6 +484,83 @@ const DashboardScreen = ({ navigation }) => {
           </View>
         </TouchableOpacity>
       </View>
+
+      {/* Edit Company Modal */}
+      <Modal
+        visible={editModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Company Information</Text>
+              <TouchableOpacity 
+                style={styles.closeButton}
+                onPress={() => setEditModalVisible(false)}
+              >
+                <Text style={styles.closeButtonText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.modalContent}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Company Name</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={editFormData.name}
+                  onChangeText={(text) => setEditFormData(prev => ({ ...prev, name: text }))}
+                  placeholder="Enter company name"
+                  placeholderTextColor="#666"
+                />
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Country</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={editFormData.country}
+                  onChangeText={(text) => setEditFormData(prev => ({ ...prev, country: text }))}
+                  placeholder="Enter country"
+                  placeholderTextColor="#666"
+                />
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>State</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={editFormData.state}
+                  onChangeText={(text) => setEditFormData(prev => ({ ...prev, state: text }))}
+                  placeholder="Enter state"
+                  placeholderTextColor="#666"
+                />
+              </View>
+            </View>
+            
+            <View style={styles.modalActions}>
+              <TouchableOpacity 
+                style={styles.cancelButton}
+                onPress={() => setEditModalVisible(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.saveButton, editLoading && styles.saveButtonDisabled]}
+                onPress={handleEditSave}
+                disabled={editLoading}
+              >
+                {editLoading ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.saveButtonText}>Save Changes</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -630,6 +776,130 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: '#fff',
+  },
+  editButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  editButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContainer: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 20,
+    width: '100%',
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  modalTitle: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
+    flex: 1,
+  },
+  closeButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  modalContent: {
+    padding: 20,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  modalInput: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    padding: 15,
+    color: '#fff',
+    fontSize: 16,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    padding: 20,
+    gap: 15,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  cancelButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  saveButton: {
+    flex: 1,
+    backgroundColor: '#00E676',
+    padding: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#00E676',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  saveButtonDisabled: {
+    backgroundColor: '#666',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
 
