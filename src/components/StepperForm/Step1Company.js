@@ -138,15 +138,18 @@ const Step1Company = ({ data, setData, nextStep }) => {
 const styles = StyleSheet.create({
   container: { padding: 20 },
   title: { color: "#fff", fontSize: 22, marginBottom: 20 },
-  input: { 
-    backgroundColor: "#111", 
-    color: "#fff", 
-    padding: 12, 
-    borderRadius: 8, 
-    marginBottom: 5,
+  input: {
+    color: 'white',
     borderWidth: 1,
-    borderColor: "#333"
+    borderColor: '#EAE7EC',
+    padding: 12,
+    borderRadius: 8,
+    fontSize: 14,
+    marginBottom: 15,
+    fontFamily: 'Poppins-Regular',
+
   },
+
   inputError: {
     borderColor: "#ff4444",
     borderWidth: 1,

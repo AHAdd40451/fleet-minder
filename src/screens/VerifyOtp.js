@@ -120,7 +120,7 @@ export default VerifyOtp;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#fff",
+    backgroundColor: "black",
     paddingHorizontal: 20,
     justifyContent: "center",
   },
@@ -135,11 +135,12 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 80,
     marginBottom: 10,
+    color:"#FFFFFF",
   },
   subText: {
     textAlign: "center",
     fontSize: 14,
-    color: "#555",
+    color: "#FFFFFF",
     marginBottom: 30,
   },
   otpContainer: {
@@ -160,6 +161,7 @@ const styles = StyleSheet.create({
   otpText: {
     fontSize: 20,
     fontWeight: "bold",
+    color: "#FFFFFF", 
   },
   warning: {
     textAlign: "center",
@@ -182,16 +184,17 @@ const styles = StyleSheet.create({
   keyText: {
     fontSize: 22,
     fontWeight: "600",
+    color:"#FFFFFF",
   },
   continueButton: {
-    backgroundColor: "#000",
+    backgroundColor: "white",
     paddingVertical: 15,
     borderRadius: 10,
     marginTop: 30,
     marginHorizontal: 40,
   },
   continueText: {
-    color: "#fff",
+    color: "black",
     fontSize: 16,
     textAlign: "center",
     fontWeight: "bold",
