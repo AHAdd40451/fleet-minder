@@ -34,28 +34,22 @@ const VerifyOtp = ({ navigation, route }) => {
 
     setLoading(true);
     try {
-      // Verify the OTP
+      // Verify OTP and handle user creation/routing in one call
       const verifyResult = await verifyOtp(phone, otp);
       if (!verifyResult.ok) {
         Alert.alert('Error', verifyResult.error || 'Invalid OTP');
         return;
       }
 
-      // Check if user exists
-      const userCheckResult = await checkUserExists(phone);
-      if (!userCheckResult.ok) {
-        Alert.alert('Error', userCheckResult.error || 'Failed to check user status');
-        return;
-      }
-
       // Store phone number for future use
       await AsyncStorage.setItem('userPhone', phone);
 
-      if (userCheckResult.exists) {
-        // User exists - go to Dashboard
+      // Route based on verification result
+      if (verifyResult.redirectTo === 'dashboard') {
+        // Existing user - go to Dashboard
         await AsyncStorage.setItem('isOnboardingComplete', 'true');
         navigation.reset({ index: 0, routes: [{ name: 'Dashboard' }] });
-      } else {
+      } else if (verifyResult.redirectTo === 'onboarding') {
         // New user - go to Onboarding
         await AsyncStorage.setItem('isOnboardingComplete', 'false');
         navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] });

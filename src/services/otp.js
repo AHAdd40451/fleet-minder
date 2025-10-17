@@ -52,7 +52,7 @@ export const verifyOtp = async (phone, code) => {
   const nowIso = new Date().toISOString();
   const { data, error } = await supabase
     .from("otps")
-    .select("id, expires_at, used")
+    .select("id, expires_at")
     .eq("phone", phone)
     .eq("code", code)
     .order("created_at", { ascending: false })
@@ -65,43 +65,51 @@ export const verifyOtp = async (phone, code) => {
   if (!data) {
     return { ok: false, error: "Invalid code" };
   }
-  if (data.used) {
-    return { ok: false, error: "Code already used" };
-  }
   if (data.expires_at && data.expires_at < nowIso) {
     return { ok: false, error: "Code expired" };
   }
 
-  // Mark as used to prevent reuse
-  const { error: updateError } = await supabase.from("otps").update({ used: true }).eq("id", data.id);
-  if (updateError) {
-    console.log('Failed to mark OTP as used:', updateError);
-    // Don't fail the verification if we can't mark as used - the OTP is still valid
-    // This handles RLS or permission issues gracefully
+  // Check if user exists
+  const { data: userData, error: userError } = await supabase
+    .from("users")
+    .select("id, phone, verified, is_onboarding_complete")
+    .eq("phone", phone)
+    .maybeSingle();
+
+  if (userError) {
+    return { ok: false, error: userError.message };
   }
 
-  return { ok: true };
-};
-
-// Check if user exists in the database
-export const checkUserExists = async (phone) => {
-  if (!phone) {
-    return { ok: false, error: "Missing phone" };
-  }
-
-  try {
-    const { data, error } = await supabase
+  // If user doesn't exist, create new user
+  if (!userData) {
+    const { data: newUser, error: createError } = await supabase
       .from("users")
-      .select("id, phone, verified, is_onboarding_complete")
-      .eq("phone", phone)
-      .maybeSingle();
+      .insert({
+        phone: phone,
+        verified: true,
+        is_onboarding_complete: false,
+        created_at: new Date().toISOString()
+      })
+      .select()
+      .single();
 
-    if (error) {
-      return { ok: false, error: error.message };
+    if (createError) {
+      return { ok: false, error: createError.message };
     }
 
-    return { ok: true, exists: !!data, user: data };
-  } catch (error) {
-    return { ok: false, error: error.message || "Failed to check user existence" };
+    return { 
+      ok: true, 
+      userExists: false, 
+      user: newUser,
+      redirectTo: 'onboarding'
+    };
   }
+
+  // User exists
+  return { 
+    ok: true, 
+    userExists: true, 
+    user: userData,
+    redirectTo: 'dashboard'
+  };
 };
