@@ -1,14 +1,33 @@
-import React from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
+import { requestOtp } from '../services/otp';
 
 const SignIn = () => {
   const navigation = useNavigation();
+  const [phone, setPhone] = useState('');
+  const [loading, setLoading] = useState(false);
 
-  const handleSubmit = () => {
-    
-    navigation.navigate('VerifyOtp');
+  const handleSubmit = async () => {
+    if (!phone || phone.length < 10) {
+      Alert.alert('Error', 'Please enter a valid phone number');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const result = await requestOtp(phone);
+      if (result.ok) {
+        navigation.navigate('VerifyOtp', { phone });
+      } else {
+        Alert.alert('Error', result.error || 'Failed to send OTP');
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Failed to send OTP. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -28,10 +47,18 @@ const SignIn = () => {
         style={styles.input}
         keyboardType="phone-pad"
         maxLength={11}
+        value={phone}
+        onChangeText={setPhone}
       />
 
-      <TouchableOpacity style={styles.button} onPress={handleSubmit}>
-        <Text style={styles.buttonText}>Submit</Text>
+      <TouchableOpacity 
+        style={[styles.button, loading && styles.buttonDisabled]} 
+        onPress={handleSubmit}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>
+          {loading ? 'Sending...' : 'Submit'}
+        </Text>
       </TouchableOpacity>
 
       <View style={styles.dividerContainer}>
@@ -114,5 +141,8 @@ const styles = StyleSheet.create({
     color: '#181818',
     fontSize: 14,
     fontFamily: 'Poppins-Regular',
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });

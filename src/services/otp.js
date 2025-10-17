@@ -1,9 +1,9 @@
 import { supabase } from "../lib/supabase";
 
-// Generates a 6-digit numeric OTP as a string
+// Generates a 4-digit numeric OTP as a string
 const generateOtpCode = () => {
-  const min = 100000;
-  const max = 999999;
+  const min = 1000;
+  const max = 9999;
   return String(Math.floor(Math.random() * (max - min + 1)) + min);
 };
 
@@ -81,4 +81,27 @@ export const verifyOtp = async (phone, code) => {
   }
 
   return { ok: true };
+};
+
+// Check if user exists in the database
+export const checkUserExists = async (phone) => {
+  if (!phone) {
+    return { ok: false, error: "Missing phone" };
+  }
+
+  try {
+    const { data, error } = await supabase
+      .from("users")
+      .select("id, phone, verified, is_onboarding_complete")
+      .eq("phone", phone)
+      .maybeSingle();
+
+    if (error) {
+      return { ok: false, error: error.message };
+    }
+
+    return { ok: true, exists: !!data, user: data };
+  } catch (error) {
+    return { ok: false, error: error.message || "Failed to check user existence" };
+  }
 };

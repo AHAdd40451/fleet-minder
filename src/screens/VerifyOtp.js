@@ -1,11 +1,15 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
-import { Ionicons } from "@expo/vector-icons"; 
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import { verifyOtp, checkUserExists } from "../services/otp";
+import AsyncStorage from "@react-native-async-storage/async-storage"; 
 
 const { width } = Dimensions.get("window");
 
-const VerifyOtp = ({ navigation }) => {
+const VerifyOtp = ({ navigation, route }) => {
   const [otp, setOtp] = useState("");
+  const [loading, setLoading] = useState(false);
+  const phone = route?.params?.phone;
 
   const handlePress = (num) => {
     if (otp.length < 4) {
@@ -15,6 +19,52 @@ const VerifyOtp = ({ navigation }) => {
 
   const handleDelete = () => {
     setOtp(otp.slice(0, -1));
+  };
+
+  const handleContinue = async () => {
+    if (otp.length !== 4) {
+      Alert.alert('Error', 'Please enter a 4-digit OTP');
+      return;
+    }
+
+    if (!phone) {
+      Alert.alert('Error', 'Phone number not found. Please try again.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      // Verify the OTP
+      const verifyResult = await verifyOtp(phone, otp);
+      if (!verifyResult.ok) {
+        Alert.alert('Error', verifyResult.error || 'Invalid OTP');
+        return;
+      }
+
+      // Check if user exists
+      const userCheckResult = await checkUserExists(phone);
+      if (!userCheckResult.ok) {
+        Alert.alert('Error', userCheckResult.error || 'Failed to check user status');
+        return;
+      }
+
+      // Store phone number for future use
+      await AsyncStorage.setItem('userPhone', phone);
+
+      if (userCheckResult.exists) {
+        // User exists - go to Dashboard
+        await AsyncStorage.setItem('isOnboardingComplete', 'true');
+        navigation.reset({ index: 0, routes: [{ name: 'Dashboard' }] });
+      } else {
+        // New user - go to Onboarding
+        await AsyncStorage.setItem('isOnboardingComplete', 'false');
+        navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] });
+      }
+    } catch (error) {
+      Alert.alert('Error', 'Something went wrong. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -58,8 +108,14 @@ const VerifyOtp = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      <TouchableOpacity style={styles.continueButton}>
-        <Text style={styles.continueText}>Continue</Text>
+      <TouchableOpacity 
+        style={[styles.continueButton, loading && styles.buttonDisabled]} 
+        onPress={handleContinue}
+        disabled={loading}
+      >
+        <Text style={styles.continueText}>
+          {loading ? 'Verifying...' : 'Continue'}
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -145,5 +201,8 @@ const styles = StyleSheet.create({
     fontSize: 16,
     textAlign: "center",
     fontWeight: "bold",
+  },
+  buttonDisabled: {
+    opacity: 0.6,
   },
 });
