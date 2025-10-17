@@ -41,8 +41,11 @@ const VerifyOtp = ({ navigation, route }) => {
         return;
       }
 
-      // Store phone number for future use
+      // Store phone number and user_id for future use
       await AsyncStorage.setItem('userPhone', phone);
+      if (verifyResult.user && verifyResult.user.id) {
+        await AsyncStorage.setItem('userId', verifyResult.user.id);
+      }
 
       // Route based on verification result
       if (verifyResult.redirectTo === 'dashboard') {

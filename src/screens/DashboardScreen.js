@@ -25,11 +25,70 @@ const DashboardScreen = ({ navigation }) => {
 
   const fetchUserData = async () => {
     try {
-      // Get the phone number from AsyncStorage or use a default approach
+      // Get stored user_id and phone from AsyncStorage
+      const storedUserId = await AsyncStorage.getItem('userId');
       const storedPhone = await AsyncStorage.getItem('userPhone');
       
-      if (!storedPhone) {
-        // If no stored phone, try to get the latest user data
+      if (storedUserId) {
+        // Use stored user_id for direct data fetching
+        const { data: user, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', storedUserId)
+          .single();
+        
+        if (userError) throw userError;
+        setUserData(user);
+        
+        // Fetch company data using user_id
+        const { data: company, error: companyError } = await supabase
+          .from('companies')
+          .select('*')
+          .eq('user_id', storedUserId)
+          .single();
+        
+        if (companyError) throw companyError;
+        setCompanyData(company);
+        
+        // Fetch vehicle data using user_id
+        const { data: vehicles, error: vehicleError } = await supabase
+          .from('vehicles')
+          .select('*')
+          .eq('user_id', storedUserId);
+        
+        if (vehicleError) throw vehicleError;
+        setVehicleData(vehicles && vehicles.length > 0 ? vehicles[0] : null);
+      } else if (storedPhone) {
+        // Fallback: Use stored phone to fetch data
+        const { data: users, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('phone', storedPhone)
+          .single();
+        
+        if (userError) throw userError;
+        setUserData(users);
+        
+        // Fetch company data using user_id
+        const { data: company, error: companyError } = await supabase
+          .from('companies')
+          .select('*')
+          .eq('user_id', users.id)
+          .single();
+        
+        if (companyError) throw companyError;
+        setCompanyData(company);
+        
+        // Fetch vehicle data using user_id
+        const { data: vehicles, error: vehicleError } = await supabase
+          .from('vehicles')
+          .select('*')
+          .eq('user_id', users.id);
+        
+        if (vehicleError) throw vehicleError;
+        setVehicleData(vehicles && vehicles.length > 0 ? vehicles[0] : null);
+      } else {
+        // Last resort: Get the latest user data
         const { data: users, error: userError } = await supabase
           .from('users')
           .select('*')
@@ -42,54 +101,25 @@ const DashboardScreen = ({ navigation }) => {
           const user = users[0];
           setUserData(user);
           
-          // Fetch company data
+          // Fetch company data using user_id
           const { data: company, error: companyError } = await supabase
             .from('companies')
             .select('*')
-            .eq('id', user.company_id)
+            .eq('user_id', user.id)
             .single();
           
           if (companyError) throw companyError;
           setCompanyData(company);
           
-          // Fetch vehicle data
+          // Fetch vehicle data using user_id
           const { data: vehicles, error: vehicleError } = await supabase
             .from('vehicles')
             .select('*')
-            .eq('company_id', user.company_id);
+            .eq('user_id', user.id);
           
           if (vehicleError) throw vehicleError;
           setVehicleData(vehicles && vehicles.length > 0 ? vehicles[0] : null);
         }
-      } else {
-        // Use stored phone to fetch data
-        const { data: users, error: userError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('phone', storedPhone)
-          .single();
-        
-        if (userError) throw userError;
-        setUserData(users);
-        
-        // Fetch company data
-        const { data: company, error: companyError } = await supabase
-          .from('companies')
-          .select('*')
-          .eq('id', users.company_id)
-          .single();
-        
-        if (companyError) throw companyError;
-        setCompanyData(company);
-        
-        // Fetch vehicle data
-        const { data: vehicles, error: vehicleError } = await supabase
-          .from('vehicles')
-          .select('*')
-          .eq('company_id', users.company_id);
-        
-        if (vehicleError) throw vehicleError;
-        setVehicleData(vehicles && vehicles.length > 0 ? vehicles[0] : null);
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -122,6 +152,7 @@ const DashboardScreen = ({ navigation }) => {
             try {
               await AsyncStorage.removeItem('isOnboardingComplete');
               await AsyncStorage.removeItem('userPhone');
+              await AsyncStorage.removeItem('userId');
               navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] });
             } catch (error) {
               console.error('Logout error:', error);

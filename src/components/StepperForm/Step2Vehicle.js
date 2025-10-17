@@ -216,18 +216,26 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
     try {
       setSaving(true);
       
-      // 1️⃣ Insert company
+      // Get user_id from AsyncStorage (set during sign-in)
+      const storedUserId = await AsyncStorage.getItem('userId');
+      if (!storedUserId) {
+        Alert.alert("Error", "User not found. Please sign in first.");
+        return;
+      }
+
+      // 1️⃣ Insert company with user_id reference
       const { data: comp, error: compErr } = await supabase.from("companies").insert({
         name: companyData.name,
-        phone: companyData.phone,
         country: companyData.country,
         state: companyData.state,
+        user_id: storedUserId, // Reference to existing user
       }).select().single();
       if (compErr) throw compErr;
 
-      // 2️⃣ Insert vehicle - using columns that exist in the schema
+      // 2️⃣ Insert vehicle with both company_id and user_id references
       const vehiclePayload = {
         company_id: comp.id,
+        user_id: storedUserId, // Reference to existing user
         vin: vin || null,
         // Add other fields if they exist in your schema
         // make: make || null,
@@ -241,25 +249,26 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
       const { error: vehErr } = await supabase.from("vehicles").insert(vehiclePayload);
       if (vehErr) throw vehErr;
 
-      // 3️⃣ Create user
-      const { error: userErr } = await supabase.from("users").insert({
-        company_id: comp.id,
-        phone: companyData.phone,
-        verified: false, // Will be verified through sign-in flow
-        is_onboarding_complete: true,
-      });
-      if (userErr) throw userErr;
+      // 3️⃣ Update user with company_id and mark onboarding as complete
+      const { error: updateUserErr } = await supabase
+        .from('users')
+        .update({ 
+          company_id: comp.id,
+          is_onboarding_complete: true 
+        })
+        .eq('id', storedUserId);
+      
+      if (updateUserErr) console.warn('Could not update user:', updateUserErr);
 
       // Persist local gate so user skips onboarding next app launch
       await AsyncStorage.setItem("isOnboardingComplete", "true");
-      await AsyncStorage.setItem("userPhone", companyData.phone);
 
       // Navigate to Dashboard
       navigation.reset({ index: 0, routes: [{ name: 'Dashboard' }] });
       
       Alert.alert(
         "Success",
-        "Setup completed successfully! You can now sign in with your phone number.",
+        "Setup completed successfully!",
         [{ text: "OK" }]
       );
     } catch (e) {

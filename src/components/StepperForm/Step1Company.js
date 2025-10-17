@@ -1,10 +1,9 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
-import { validatePhone, validateRequired } from "../../utils/validation";
+import { validateRequired } from "../../utils/validation";
 
 const Step1Company = ({ data, setData, nextStep }) => {
   const [companyName, setCompanyName] = useState(data.name || "");
-  const [phone, setPhone] = useState(data.phone || "");
   const [country, setCountry] = useState(data.country || "");
   const [state, setState] = useState(data.state || "");
 
@@ -17,12 +16,6 @@ const Step1Company = ({ data, setData, nextStep }) => {
     const nameValidation = validateRequired(companyName, "Company name");
     if (!nameValidation.isValid) {
       newErrors.companyName = nameValidation.message;
-    }
-    
-    // Validate phone
-    const phoneValidation = validatePhone(phone);
-    if (!phoneValidation.isValid) {
-      newErrors.phone = phoneValidation.message;
     }
     
     // Validate country
@@ -46,7 +39,7 @@ const Step1Company = ({ data, setData, nextStep }) => {
       return;
     }
     
-    setData({ name: companyName, phone, country, state });
+    setData({ name: companyName, country, state });
     nextStep();
   };
 
@@ -69,21 +62,6 @@ const Step1Company = ({ data, setData, nextStep }) => {
         {errors.companyName && <Text style={styles.errorText}>{errors.companyName}</Text>}
       </View>
 
-      <View>
-        <TextInput
-          style={[styles.input, errors.phone && styles.inputError]}
-          placeholder="Phone"
-          keyboardType="phone-pad"
-          value={phone}
-          onChangeText={(text) => {
-            setPhone(text);
-            if (errors.phone) {
-              setErrors(prev => ({ ...prev, phone: null }));
-            }
-          }}
-        />
-        {errors.phone && <Text style={styles.errorText}>{errors.phone}</Text>}
-      </View>
 
       <View>
         <TextInput
