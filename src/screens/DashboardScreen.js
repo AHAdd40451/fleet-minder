@@ -49,15 +49,16 @@ const DashboardScreen = ({ navigation }) => {
         if (userError) throw userError;
         setUserData(user);
         
-        // Fetch company data using user_id
-        const { data: company, error: companyError } = await supabase
+        // Fetch company data using user_id - get the most recent one
+        const { data: companies, error: companyError } = await supabase
           .from('companies')
           .select('*')
           .eq('user_id', storedUserId)
-          .single();
+          .order('created_at', { ascending: false })
+          .limit(1);
         
         if (companyError) throw companyError;
-        setCompanyData(company);
+        setCompanyData(companies && companies.length > 0 ? companies[0] : null);
         
         // Fetch vehicle data using user_id
         const { data: vehicles, error: vehicleError } = await supabase
@@ -78,15 +79,16 @@ const DashboardScreen = ({ navigation }) => {
         if (userError) throw userError;
         setUserData(users);
         
-        // Fetch company data using user_id
-        const { data: company, error: companyError } = await supabase
+        // Fetch company data using user_id - get the most recent one
+        const { data: companies, error: companyError } = await supabase
           .from('companies')
           .select('*')
           .eq('user_id', users.id)
-          .single();
+          .order('created_at', { ascending: false })
+          .limit(1);
         
         if (companyError) throw companyError;
-        setCompanyData(company);
+        setCompanyData(companies && companies.length > 0 ? companies[0] : null);
         
         // Fetch vehicle data using user_id
         const { data: vehicles, error: vehicleError } = await supabase
@@ -110,15 +112,16 @@ const DashboardScreen = ({ navigation }) => {
           const user = users[0];
           setUserData(user);
           
-          // Fetch company data using user_id
-          const { data: company, error: companyError } = await supabase
+          // Fetch company data using user_id - get the most recent one
+          const { data: companies, error: companyError } = await supabase
             .from('companies')
             .select('*')
             .eq('user_id', user.id)
-            .single();
+            .order('created_at', { ascending: false })
+            .limit(1);
           
           if (companyError) throw companyError;
-          setCompanyData(company);
+          setCompanyData(companies && companies.length > 0 ? companies[0] : null);
           
           // Fetch vehicle data using user_id
           const { data: vehicles, error: vehicleError } = await supabase
@@ -207,6 +210,7 @@ const DashboardScreen = ({ navigation }) => {
       const { error } = await supabase
         .from('companies')
         .upsert({
+          id: companyData.id, // Include company ID to update existing record
           user_id: storedUserId,
           name: editFormData.name.trim(),
           country: editFormData.country.trim(),
