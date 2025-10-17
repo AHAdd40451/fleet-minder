@@ -206,12 +206,12 @@ const DashboardScreen = ({ navigation }) => {
 
       const { error } = await supabase
         .from('companies')
-        .update({
+        .upsert({
+          user_id: storedUserId,
           name: editFormData.name.trim(),
           country: editFormData.country.trim(),
           state: editFormData.state.trim()
-        })
-        .eq('user_id', storedUserId);
+        });
 
       if (error) throw error;
 

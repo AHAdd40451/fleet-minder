@@ -250,13 +250,18 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
       if (vehErr) throw vehErr;
 
       // 3️⃣ Update user with company_id and mark onboarding as complete
+      // Get user phone from AsyncStorage to include in upsert
+      const storedUserPhone = await AsyncStorage.getItem('userPhone');
+      
       const { error: updateUserErr } = await supabase
         .from('users')
-        .update({ 
+        
+        .upsert({ 
+          id: storedUserId,
+          phone: storedUserPhone, // Include phone to satisfy NOT NULL constraint
           company_id: comp.id,
           is_onboarding_complete: true 
-        })
-        .eq('id', storedUserId);
+        });
       
       if (updateUserErr) console.warn('Could not update user:', updateUserErr);
 
