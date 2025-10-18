@@ -32,7 +32,7 @@ export default Splash;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'white',
+    backgroundColor: 'black',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
@@ -44,7 +44,7 @@ const styles = StyleSheet.create({
     marginBottom: 50,  
   },
   title: {
-    color: '#000000',
+    color: '#FFFFFF',
     fontSize: 26,
     fontWeight: '500',
     lineHeight: 36,
@@ -52,7 +52,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,  
   },
   paragraph: {
-    color: '#7D7D7D',
+    color: '#FFFFFF',
     fontSize: 14,
     fontFamily: 'Poppins-Medium',
     fontWeight: '500',
@@ -61,6 +61,7 @@ const styles = StyleSheet.create({
   button: {
     marginTop: 30,
     backgroundColor: '#2e2e2e',
+    backgroundColor:"white",
     paddingVertical: 15,
     paddingHorizontal: 40,
     borderRadius: 12,
@@ -70,7 +71,7 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: 'Poppins-Medium',
     fontWeight: '500',
-    color: '#FFFFFF',
+    color: 'black',
     fontSize: 14,
   },
 });

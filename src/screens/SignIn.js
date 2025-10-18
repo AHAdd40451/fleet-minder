@@ -43,7 +43,7 @@ const SignIn = () => {
 
       <TextInput
         placeholder="Phone Number"
-        placeholderTextColor="#888"
+        placeholderTextColor="#FFFFFF"
         style={styles.input}
         keyboardType="phone-pad"
         maxLength={11}
@@ -61,7 +61,7 @@ const SignIn = () => {
         </Text>
       </TouchableOpacity>
 
-      <View style={styles.dividerContainer}>
+      {/* <View style={styles.dividerContainer}>
         <View style={styles.line} />
         <Text style={styles.footerText1}>or</Text>
         <View style={styles.line} />
@@ -69,7 +69,7 @@ const SignIn = () => {
 
       <Text style={styles.footerText}>
         Sign in as guest
-      </Text>
+      </Text> */}
     </View>
   );
 };
@@ -79,7 +79,8 @@ export default SignIn;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#fff',
+    backgroundColor: 'black',
+    color:"#FFFFFF",
     paddingHorizontal: 20,
     justifyContent: 'center',
   },
@@ -96,10 +97,12 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     fontFamily: 'Poppins-Regular',
     marginTop: 80,
+    color:"#FFFFFF",
   },
   input: {
     borderWidth: 1,
-    borderColor: '#EAE7EC',
+    borderColor: '#FFFFFF',
+    color: '#FFFFFF',
     padding: 12,
     borderRadius: 8,
     fontSize: 14,
@@ -107,13 +110,13 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Regular',
   },
   button: {
-    backgroundColor: '#2E2E2E',
+    backgroundColor: '#FFFFFF',
     paddingVertical: 15,
     borderRadius: 8,
     marginTop: 10,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: 'black',
     textAlign: 'center',
     fontSize: 14,
     fontWeight: '500',
@@ -138,7 +141,7 @@ const styles = StyleSheet.create({
   footerText: {
     textAlign: 'center',
     marginTop: 20,
-    color: '#181818',
+    color: '#FFFFFF',
     fontSize: 14,
     fontFamily: 'Poppins-Regular',
   },
