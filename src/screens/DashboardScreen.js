@@ -891,9 +891,6 @@ const DashboardScreen = ({ navigation }) => {
                 {vehicleFormErrors.vin && <Text style={styles.errorText}>{vehicleFormErrors.vin}</Text>}
               </View>
               
-              
-              
-              
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Color (Optional)</Text>
                 <TextInput
@@ -1122,9 +1119,6 @@ const DashboardScreen = ({ navigation }) => {
                 />
                 {vehicleFormErrors.vin && <Text style={styles.errorText}>{vehicleFormErrors.vin}</Text>}
               </View>
-              
-              
-              
               
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Color (Optional)</Text>
@@ -1732,6 +1726,7 @@ const styles = StyleSheet.create({
   },
   inputContainer: {
     marginBottom: 20,
+    marginTop: 5,
   },
   inputLabel: {
     color: '#fff',
@@ -1740,13 +1735,13 @@ const styles = StyleSheet.create({
     marginBottom: 8,
   },
   modalInput: {
-    backgroundColor: 'rgba(255, 255, 255, 0.05)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.1)',
-    borderRadius: 12,
-    padding: 15,
-    color: '#fff',
-    fontSize: 16,
+    borderColor: '#FFFFFF',
+    color: '#FFFFFF',
+    padding: 12,
+    borderRadius: 8,
+    fontSize: 14,
+    fontFamily: 'Poppins-Regular',
   },
   inputError: {
     borderColor: '#ff4444',
@@ -1765,7 +1760,8 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
   },
   imageSection: {
-    marginVertical: 15,
+    marginVertical: 20,
+    marginHorizontal: 5,
   },
   sectionTitle: {
     color: '#fff',
@@ -1778,7 +1774,8 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 8,
     alignItems: 'center',
-    marginBottom: 10,
+    marginBottom: 15,
+    marginTop: 10,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
     borderStyle: 'dashed',
@@ -1823,6 +1820,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: 20,
     gap: 15,
+    marginTop: 10,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.1)',
   },

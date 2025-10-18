@@ -104,15 +104,14 @@ const styles = StyleSheet.create({
   container: { padding: 20 },
   title: { color: "#fff", fontSize: 22, marginBottom: 20 },
   input: {
-    color: 'white',
     borderWidth: 1,
-    borderColor: '#EAE7EC',
+    borderColor: '#FFFFFF',
+    color: '#FFFFFF',
     padding: 12,
     borderRadius: 8,
     fontSize: 14,
     marginBottom: 15,
     fontFamily: 'Poppins-Regular',
-
   },
 
   inputError: {

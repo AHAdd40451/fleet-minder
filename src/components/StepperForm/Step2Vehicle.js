@@ -455,16 +455,17 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
 };
 
 const styles = StyleSheet.create({
-  container: { padding: 20 },
+  container: { padding: 20, marginBottom: 20 },
   title: { color: "#fff", fontSize: 22, marginBottom: 20 },
   input: {
-    backgroundColor: "#111",
-    color: "#fff",
+    borderWidth: 1,
+    borderColor: '#FFFFFF',
+    color: '#FFFFFF',
     padding: 12,
     borderRadius: 8,
-    marginBottom: 5,
-    borderWidth: 1,
-    borderColor: "#333",
+    fontSize: 14,
+    marginBottom: 20,
+    fontFamily: 'Poppins-Regular',
   },
   inputError: {
     borderColor: "#ff4444",
