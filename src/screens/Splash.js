@@ -1,9 +1,50 @@
 import { useNavigation } from '@react-navigation/native';
-import React from 'react';
-import { View, Text, StyleSheet, Image, TouchableOpacity } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const Splash = () => {
-    const navigation = useNavigation();
+  const navigation = useNavigation();
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    checkAuthState();
+  }, []);
+
+  const checkAuthState = async () => {
+    try {
+      // Check if user is already logged in and onboarding is complete
+      const userId = await AsyncStorage.getItem('userId');
+      const isOnboardingComplete = await AsyncStorage.getItem('isOnboardingComplete');
+      
+      if (userId && isOnboardingComplete === 'true') {
+        // User is logged in and onboarding is complete - go to Dashboard
+        navigation.reset({ index: 0, routes: [{ name: 'Dashboard' }] });
+      } else if (userId && isOnboardingComplete === 'false') {
+        // User is logged in but onboarding is not complete - go to Onboarding
+        navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] });
+      } else {
+        // User is not logged in - show splash screen
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Error checking auth state:', error);
+      setLoading(false);
+    }
+  };
+
+  const handleJoin = () => {
+    navigation.navigate('SignIn');
+  };
+
+  if (loading) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator color="#fff" size="large" />
+      </View>
+    );
+  }
+
   return (
     <View style={styles.container}>
       <Image
@@ -18,11 +59,11 @@ const Splash = () => {
       </Text>
 
       <TouchableOpacity 
-  style={styles.button} 
-  onPress={() => navigation.navigate('SignIn')}
->
-  <Text style={styles.buttonText}>Join</Text>
-</TouchableOpacity>
+        style={styles.button} 
+        onPress={handleJoin}
+      >
+        <Text style={styles.buttonText}>Join</Text>
+      </TouchableOpacity>
     </View>
   );
 };

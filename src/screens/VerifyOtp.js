@@ -41,16 +41,19 @@ const VerifyOtp = ({ navigation, route }) => {
         return;
       }
 
-      // Store phone number for future use
+      // Store phone number and user_id for future use
       await AsyncStorage.setItem('userPhone', phone);
+      if (verifyResult.user && verifyResult.user.id) {
+        await AsyncStorage.setItem('userId', verifyResult.user.id);
+      }
 
       // Route based on verification result
       if (verifyResult.redirectTo === 'dashboard') {
-        // Existing user - go to Dashboard
+        // Existing user with completed onboarding - go to Dashboard
         await AsyncStorage.setItem('isOnboardingComplete', 'true');
         navigation.reset({ index: 0, routes: [{ name: 'Dashboard' }] });
       } else if (verifyResult.redirectTo === 'onboarding') {
-        // New user - go to Onboarding
+        // New user or existing user without completed onboarding - go to Onboarding
         await AsyncStorage.setItem('isOnboardingComplete', 'false');
         navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] });
       }

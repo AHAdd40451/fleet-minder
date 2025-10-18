@@ -9,7 +9,9 @@ import {
   Alert,
   RefreshControl,
   ActivityIndicator,
-  Dimensions 
+  Dimensions,
+  Modal,
+  TextInput
 } from 'react-native';
 import { supabase } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -22,14 +24,82 @@ const DashboardScreen = ({ navigation }) => {
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    country: '',
+    state: ''
+  });
+  const [editLoading, setEditLoading] = useState(false);
 
   const fetchUserData = async () => {
     try {
-      // Get the phone number from AsyncStorage or use a default approach
+      // Get stored user_id and phone from AsyncStorage
+      const storedUserId = await AsyncStorage.getItem('userId');
       const storedPhone = await AsyncStorage.getItem('userPhone');
       
-      if (!storedPhone) {
-        // If no stored phone, try to get the latest user data
+      if (storedUserId) {
+        // Use stored user_id for direct data fetching
+        const { data: user, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('id', storedUserId)
+          .single();
+        
+        if (userError) throw userError;
+        setUserData(user);
+        
+        // Fetch company data using user_id - get the most recent one
+        const { data: companies, error: companyError } = await supabase
+          .from('companies')
+          .select('*')
+          .eq('user_id', storedUserId)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        
+        if (companyError) throw companyError;
+        setCompanyData(companies && companies.length > 0 ? companies[0] : null);
+        
+        // Fetch vehicle data using user_id
+        const { data: vehicles, error: vehicleError } = await supabase
+          .from('vehicles')
+          .select('*')
+          .eq('user_id', storedUserId);
+        
+        if (vehicleError) throw vehicleError;
+        setVehicleData(vehicles && vehicles.length > 0 ? vehicles[0] : null);
+      } else if (storedPhone) {
+        // Fallback: Use stored phone to fetch data
+        const { data: users, error: userError } = await supabase
+          .from('users')
+          .select('*')
+          .eq('phone', storedPhone)
+          .single();
+        
+        if (userError) throw userError;
+        setUserData(users);
+        
+        // Fetch company data using user_id - get the most recent one
+        const { data: companies, error: companyError } = await supabase
+          .from('companies')
+          .select('*')
+          .eq('user_id', users.id)
+          .order('created_at', { ascending: false })
+          .limit(1);
+        
+        if (companyError) throw companyError;
+        setCompanyData(companies && companies.length > 0 ? companies[0] : null);
+        
+        // Fetch vehicle data using user_id
+        const { data: vehicles, error: vehicleError } = await supabase
+          .from('vehicles')
+          .select('*')
+          .eq('user_id', users.id);
+        
+        if (vehicleError) throw vehicleError;
+        setVehicleData(vehicles && vehicles.length > 0 ? vehicles[0] : null);
+      } else {
+        // Last resort: Get the latest user data
         const { data: users, error: userError } = await supabase
           .from('users')
           .select('*')
@@ -42,54 +112,26 @@ const DashboardScreen = ({ navigation }) => {
           const user = users[0];
           setUserData(user);
           
-          // Fetch company data
-          const { data: company, error: companyError } = await supabase
+          // Fetch company data using user_id - get the most recent one
+          const { data: companies, error: companyError } = await supabase
             .from('companies')
             .select('*')
-            .eq('id', user.company_id)
-            .single();
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+            .limit(1);
           
           if (companyError) throw companyError;
-          setCompanyData(company);
+          setCompanyData(companies && companies.length > 0 ? companies[0] : null);
           
-          // Fetch vehicle data
+          // Fetch vehicle data using user_id
           const { data: vehicles, error: vehicleError } = await supabase
             .from('vehicles')
             .select('*')
-            .eq('company_id', user.company_id);
+            .eq('user_id', user.id);
           
           if (vehicleError) throw vehicleError;
           setVehicleData(vehicles && vehicles.length > 0 ? vehicles[0] : null);
         }
-      } else {
-        // Use stored phone to fetch data
-        const { data: users, error: userError } = await supabase
-          .from('users')
-          .select('*')
-          .eq('phone', storedPhone)
-          .single();
-        
-        if (userError) throw userError;
-        setUserData(users);
-        
-        // Fetch company data
-        const { data: company, error: companyError } = await supabase
-          .from('companies')
-          .select('*')
-          .eq('id', users.company_id)
-          .single();
-        
-        if (companyError) throw companyError;
-        setCompanyData(company);
-        
-        // Fetch vehicle data
-        const { data: vehicles, error: vehicleError } = await supabase
-          .from('vehicles')
-          .select('*')
-          .eq('company_id', users.company_id);
-        
-        if (vehicleError) throw vehicleError;
-        setVehicleData(vehicles && vehicles.length > 0 ? vehicles[0] : null);
       }
     } catch (error) {
       console.error('Error fetching user data:', error);
@@ -101,12 +143,98 @@ const DashboardScreen = ({ navigation }) => {
   };
 
   useEffect(() => {
-    fetchUserData();
+    checkAuthAndFetchData();
   }, []);
+
+  const checkAuthAndFetchData = async () => {
+    try {
+      // Check if user is authenticated
+      const userId = await AsyncStorage.getItem('userId');
+      const isOnboardingComplete = await AsyncStorage.getItem('isOnboardingComplete');
+      
+      if (!userId || isOnboardingComplete !== 'true') {
+        // User is not properly authenticated or onboarding not complete
+        // Clear any stale data and redirect to appropriate screen
+        await AsyncStorage.removeItem('isOnboardingComplete');
+        await AsyncStorage.removeItem('userPhone');
+        await AsyncStorage.removeItem('userId');
+        
+        if (isOnboardingComplete === 'false') {
+          navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] });
+        } else {
+          navigation.reset({ index: 0, routes: [{ name: 'SignIn' }] });
+        }
+        return;
+      }
+      
+      // User is authenticated, fetch data
+      await fetchUserData();
+    } catch (error) {
+      console.error('Auth check error:', error);
+      // On error, redirect to sign in
+      navigation.reset({ index: 0, routes: [{ name: 'SignIn' }] });
+    }
+  };
 
   const onRefresh = () => {
     setRefreshing(true);
     fetchUserData();
+  };
+
+  const openEditModal = () => {
+    if (companyData) {
+      setEditFormData({
+        name: companyData.name || '',
+        country: companyData.country || '',
+        state: companyData.state || ''
+      });
+      setEditModalVisible(true);
+    }
+  };
+
+  const handleEditSave = async () => {
+    if (!editFormData.name.trim() || !editFormData.country.trim() || !editFormData.state.trim()) {
+      Alert.alert('Error', 'All fields are required');
+      return;
+    }
+
+    try {
+      setEditLoading(true);
+      
+      const storedUserId = await AsyncStorage.getItem('userId');
+      if (!storedUserId) {
+        Alert.alert('Error', 'User not found. Please sign in again.');
+        return;
+      }
+
+      const { error } = await supabase
+        .from('companies')
+        .upsert({
+          id: companyData.id, // Include company ID to update existing record
+          user_id: storedUserId,
+          name: editFormData.name.trim(),
+          country: editFormData.country.trim(),
+          state: editFormData.state.trim()
+        });
+
+      if (error) throw error;
+
+      // Update local state
+      setCompanyData(prev => ({
+        ...prev,
+        name: editFormData.name.trim(),
+        country: editFormData.country.trim(),
+        state: editFormData.state.trim()
+      }));
+
+      setEditModalVisible(false);
+      Alert.alert('Success', 'Company information updated successfully!');
+    } catch (error) {
+      console.error('Error updating company:', error);
+      Alert.alert('Error', 'Failed to update company information. Please try again.');
+    } finally {
+      setEditLoading(false);
+    }
   };
 
   const handleLogout = async () => {
@@ -120,11 +248,16 @@ const DashboardScreen = ({ navigation }) => {
           style: 'destructive',
           onPress: async () => {
             try {
+              // Clear all stored authentication data
               await AsyncStorage.removeItem('isOnboardingComplete');
               await AsyncStorage.removeItem('userPhone');
-              navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] });
+              await AsyncStorage.removeItem('userId');
+              
+              // Navigate to SignIn screen
+              navigation.reset({ index: 0, routes: [{ name: 'SignIn' }] });
             } catch (error) {
               console.error('Logout error:', error);
+              Alert.alert('Error', 'Failed to logout. Please try again.');
             }
           }
         }
@@ -167,6 +300,11 @@ const DashboardScreen = ({ navigation }) => {
             <Text style={styles.cardIcon}>🏢</Text>
           </View>
           <Text style={styles.cardTitle}>Company Information</Text>
+          {companyData && (
+            <TouchableOpacity style={styles.editButton} onPress={openEditModal}>
+              <Text style={styles.editButtonText}>✏️ Edit</Text>
+            </TouchableOpacity>
+          )}
         </View>
         {companyData ? (
           <View style={styles.infoContainer}>
@@ -231,48 +369,61 @@ const DashboardScreen = ({ navigation }) => {
               </View>
               <Text style={styles.value}>{vehicleData.vin || 'N/A'}</Text>
             </View>
-            <View style={styles.infoRow}>
-              <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>🏭</Text>
-                <Text style={styles.label}>Make</Text>
+            {/* Vehicle details - only show if columns exist */}
+            {vehicleData.make && (
+              <View style={styles.infoRow}>
+                <View style={styles.infoLabelContainer}>
+                  <Text style={styles.infoIcon}>🏭</Text>
+                  <Text style={styles.label}>Make</Text>
+                </View>
+                <Text style={styles.value}>{vehicleData.make || 'N/A'}</Text>
               </View>
-              <Text style={styles.value}>{vehicleData.make || 'N/A'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>🚙</Text>
-                <Text style={styles.label}>Model</Text>
+            )}
+            {vehicleData.model && (
+              <View style={styles.infoRow}>
+                <View style={styles.infoLabelContainer}>
+                  <Text style={styles.infoIcon}>🚙</Text>
+                  <Text style={styles.label}>Model</Text>
+                </View>
+                <Text style={styles.value}>{vehicleData.model || 'N/A'}</Text>
               </View>
-              <Text style={styles.value}>{vehicleData.model || 'N/A'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>📅</Text>
-                <Text style={styles.label}>Year</Text>
+            )}
+            {vehicleData.year && (
+              <View style={styles.infoRow}>
+                <View style={styles.infoLabelContainer}>
+                  <Text style={styles.infoIcon}>📅</Text>
+                  <Text style={styles.label}>Year</Text>
+                </View>
+                <Text style={styles.value}>{vehicleData.year || 'N/A'}</Text>
               </View>
-              <Text style={styles.value}>{vehicleData.year || 'N/A'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>🛣️</Text>
-                <Text style={styles.label}>Mileage</Text>
+            )}
+            {vehicleData.mileage && (
+              <View style={styles.infoRow}>
+                <View style={styles.infoLabelContainer}>
+                  <Text style={styles.infoIcon}>🛣️</Text>
+                  <Text style={styles.label}>Mileage</Text>
+                </View>
+                <Text style={styles.value}>{vehicleData.mileage || 'N/A'}</Text>
               </View>
-              <Text style={styles.value}>{vehicleData.mileage || 'N/A'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>📊</Text>
-                <Text style={styles.label}>Odometer</Text>
+            )}
+            {vehicleData.odometer && (
+              <View style={styles.infoRow}>
+                <View style={styles.infoLabelContainer}>
+                  <Text style={styles.infoIcon}>📊</Text>
+                  <Text style={styles.label}>Odometer</Text>
+                </View>
+                <Text style={styles.value}>{vehicleData.odometer || 'N/A'}</Text>
               </View>
-              <Text style={styles.value}>{vehicleData.odometer || 'N/A'}</Text>
-            </View>
-            <View style={styles.infoRow}>
-              <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>🎨</Text>
-                <Text style={styles.label}>Color</Text>
+            )}
+            {vehicleData.color && (
+              <View style={styles.infoRow}>
+                <View style={styles.infoLabelContainer}>
+                  <Text style={styles.infoIcon}>🎨</Text>
+                  <Text style={styles.label}>Color</Text>
+                </View>
+                <Text style={styles.value}>{vehicleData.color || 'N/A'}</Text>
               </View>
-              <Text style={styles.value}>{vehicleData.color || 'N/A'}</Text>
-            </View>
+            )}
             {vehicleData.image_url && (
               <View style={styles.imageContainer}>
                 <View style={styles.infoLabelContainer}>
@@ -371,6 +522,83 @@ const DashboardScreen = ({ navigation }) => {
           </View>
         </TouchableOpacity>
       </View>
+
+      {/* Edit Company Modal */}
+      <Modal
+        visible={editModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setEditModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Company Information</Text>
+              <TouchableOpacity 
+                style={styles.closeButton}
+                onPress={() => setEditModalVisible(false)}
+              >
+                <Text style={styles.closeButtonText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <View style={styles.modalContent}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Company Name</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={editFormData.name}
+                  onChangeText={(text) => setEditFormData(prev => ({ ...prev, name: text }))}
+                  placeholder="Enter company name"
+                  placeholderTextColor="#666"
+                />
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Country</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={editFormData.country}
+                  onChangeText={(text) => setEditFormData(prev => ({ ...prev, country: text }))}
+                  placeholder="Enter country"
+                  placeholderTextColor="#666"
+                />
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>State</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={editFormData.state}
+                  onChangeText={(text) => setEditFormData(prev => ({ ...prev, state: text }))}
+                  placeholder="Enter state"
+                  placeholderTextColor="#666"
+                />
+              </View>
+            </View>
+            
+            <View style={styles.modalActions}>
+              <TouchableOpacity 
+                style={styles.cancelButton}
+                onPress={() => setEditModalVisible(false)}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.saveButton, editLoading && styles.saveButtonDisabled]}
+                onPress={handleEditSave}
+                disabled={editLoading}
+              >
+                {editLoading ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.saveButtonText}>Save Changes</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScrollView>
   );
 };
@@ -586,6 +814,130 @@ const styles = StyleSheet.create({
   },
   secondaryButtonText: {
     color: '#fff',
+  },
+  editButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  editButtonText: {
+    color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    padding: 20,
+  },
+  modalContainer: {
+    backgroundColor: '#1a1a1a',
+    borderRadius: 20,
+    width: '100%',
+    maxWidth: 400,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    elevation: 20,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 20,
+    borderBottomWidth: 1,
+    borderBottomColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  modalTitle: {
+    color: '#fff',
+    fontSize: 20,
+    fontWeight: '700',
+    flex: 1,
+  },
+  closeButton: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  closeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+  },
+  modalContent: {
+    padding: 20,
+  },
+  inputContainer: {
+    marginBottom: 20,
+  },
+  inputLabel: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+  },
+  modalInput: {
+    backgroundColor: 'rgba(255, 255, 255, 0.05)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 12,
+    padding: 15,
+    color: '#fff',
+    fontSize: 16,
+  },
+  modalActions: {
+    flexDirection: 'row',
+    padding: 20,
+    gap: 15,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  cancelButton: {
+    flex: 1,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  cancelButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  saveButton: {
+    flex: 1,
+    backgroundColor: '#00E676',
+    padding: 15,
+    borderRadius: 12,
+    alignItems: 'center',
+    shadowColor: '#00E676',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  saveButtonDisabled: {
+    backgroundColor: '#666',
+    shadowOpacity: 0,
+    elevation: 0,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
   },
 });
 

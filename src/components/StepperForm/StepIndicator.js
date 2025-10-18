@@ -3,7 +3,7 @@ import { View, Text, StyleSheet, Animated } from "react-native";
 
 const StepIndicator = ({ step }) => (
   <View style={styles.wrapper}>
-    {[1, 2, 3].map((s, idx) => {
+    {[1, 2].map((s, idx) => {
       const isActive = step >= s;
       const isCompleted = step > s;
       const isCurrent = step === s;
@@ -29,7 +29,7 @@ const StepIndicator = ({ step }) => (
             )}
           </View>
 
-          {idx < 2 && (
+          {idx < 1 && (
             <View style={[
               styles.line, 
               isCompleted && styles.lineActive,

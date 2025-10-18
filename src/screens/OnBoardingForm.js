@@ -5,7 +5,6 @@ import { useFocusEffect } from "@react-navigation/native";
 import StepIndicator from "../components/StepperForm/StepIndicator";
 import Step1Company from "../components/StepperForm/Step1Company";
 import Step2Vehicle from "../components/StepperForm/Step2Vehicle";
-import Step3OTP from "../components/StepperForm/Step3OTP";
 
 
 const OnboardingForm = ({ navigation }) => {
@@ -23,12 +22,28 @@ const OnboardingForm = ({ navigation }) => {
       let active = true;
       (async () => {
         try {
-          const flag = await AsyncStorage.getItem("isOnboardingComplete");
-          if (active && flag === "true") {
+          const userId = await AsyncStorage.getItem('userId');
+          const isOnboardingComplete = await AsyncStorage.getItem("isOnboardingComplete");
+          
+          if (!userId) {
+            // No user ID, redirect to sign in
+            if (active) {
+              navigation.reset({ index: 0, routes: [{ name: "SignIn" }] });
+            }
+            return;
+          }
+          
+          if (active && isOnboardingComplete === "true") {
+            // Onboarding already complete, go to dashboard
             navigation.reset({ index: 0, routes: [{ name: "Dashboard" }] });
             return;
           }
-        } catch (_) {}
+        } catch (error) {
+          console.error('Onboarding check error:', error);
+          if (active) {
+            navigation.reset({ index: 0, routes: [{ name: "SignIn" }] });
+          }
+        }
         if (active) setChecking(false);
       })();
       return () => { active = false; };
@@ -59,15 +74,6 @@ const OnboardingForm = ({ navigation }) => {
           data={vehicleData}
           setData={setVehicleData}
           nextStep={nextStep}
-          prevStep={prevStep}
-        />
-      )}
-      {step === 3 && (
-        <Step3OTP
-          companyData={companyData}
-          vehicleData={vehicleData}
-          userData={userData}
-          setUserData={setUserData}
           prevStep={prevStep}
           navigation={navigation}
         />

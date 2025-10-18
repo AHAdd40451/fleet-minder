@@ -13,9 +13,11 @@ import {
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import Tesseract from "tesseract.js";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import { supabase } from "../../lib/supabase";
 import { validateVIN, validateYear, validateNumeric, validateRequired } from "../../utils/validation";
 
-const Step2Vehicle = ({ data, setData, nextStep, prevStep }) => {
+const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigation }) => {
   const [vin, setVin] = useState(data.vin || "");
   const [make, setMake] = useState(data.make || "");
   const [model, setModel] = useState(data.model || "");
@@ -25,6 +27,7 @@ const Step2Vehicle = ({ data, setData, nextStep, prevStep }) => {
   const [vinImages, setVinImages] = useState(data.vinImages || []);
   const [meterImages, setMeterImages] = useState(data.meterImages || []);
   const [loading, setLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState({});
 
   const pickImages = async (setter, type) => {
@@ -205,22 +208,79 @@ const Step2Vehicle = ({ data, setData, nextStep, prevStep }) => {
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleNext = () => {
+  const handleFinish = async () => {
     if (!validateForm()) {
       return;
     }
     
-    setData({
-      vin,
-      make,
-      model,
-      year,
-      mileage,
-      odometer,
-      vinImages,
-      meterImages,
-    });
-    nextStep();
+    try {
+      setSaving(true);
+      
+      // Get user_id from AsyncStorage (set during sign-in)
+      const storedUserId = await AsyncStorage.getItem('userId');
+      if (!storedUserId) {
+        Alert.alert("Error", "User not found. Please sign in first.");
+        return;
+      }
+
+      // 1️⃣ Insert company with user_id reference
+      const { data: comp, error: compErr } = await supabase.from("companies").insert({
+        name: companyData.name,
+        country: companyData.country,
+        state: companyData.state,
+        user_id: storedUserId, // Reference to existing user
+      }).select().single();
+      if (compErr) throw compErr;
+
+      // 2️⃣ Insert vehicle with both company_id and user_id references
+      const vehiclePayload = {
+        company_id: comp.id,
+        user_id: storedUserId, // Reference to existing user
+        vin: vin || null,
+        // Add other fields if they exist in your schema
+        // make: make || null,
+        // model: model || null,
+        // year: year ? Number(year) : null,
+        // color: null,
+        // mileage: mileage ? Number(mileage) : null,
+        // odometer: odometer ? Number(odometer) : null,
+        // image_url: null,
+      };
+      const { error: vehErr } = await supabase.from("vehicles").insert(vehiclePayload);
+      if (vehErr) throw vehErr;
+
+      // 3️⃣ Update user with company_id and mark onboarding as complete
+      // Get user phone from AsyncStorage to include in upsert
+      const storedUserPhone = await AsyncStorage.getItem('userPhone');
+      
+      const { error: updateUserErr } = await supabase
+        .from('users')
+        
+        .upsert({ 
+          id: storedUserId,
+          phone: storedUserPhone, // Include phone to satisfy NOT NULL constraint
+          company_id: comp.id,
+          is_onboarding_complete: true 
+        });
+      
+      if (updateUserErr) console.warn('Could not update user:', updateUserErr);
+
+      // Persist local gate so user skips onboarding next app launch
+      await AsyncStorage.setItem("isOnboardingComplete", "true");
+
+      // Navigate to Dashboard
+      navigation.reset({ index: 0, routes: [{ name: 'Dashboard' }] });
+      
+      Alert.alert(
+        "Success",
+        "Setup completed successfully!",
+        [{ text: "OK" }]
+      );
+    } catch (e) {
+      Alert.alert("Error", e.message || "Failed to save data. Please try again.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -382,8 +442,12 @@ const Step2Vehicle = ({ data, setData, nextStep, prevStep }) => {
         <TouchableOpacity style={styles.btn} onPress={prevStep}>
           <Text style={styles.btnText}>Back</Text>
         </TouchableOpacity>
-        <TouchableOpacity style={styles.btn} onPress={handleNext}>
-          <Text style={styles.btnText}>Next</Text>
+        <TouchableOpacity 
+          style={[styles.btn, saving && styles.btnDisabled]} 
+          onPress={handleFinish}
+          disabled={saving}
+        >
+          <Text style={styles.btnText}>{saving ? "Saving..." : "Finish"}</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -472,6 +536,10 @@ const styles = StyleSheet.create({
     padding: 15,
     borderRadius: 8,
     width: "48%",
+  },
+  btnDisabled: {
+    backgroundColor: "#ccc",
+    opacity: 0.6,
   },
   btnText: { textAlign: "center", color: "#000", fontWeight: "bold" },
   buttonsRow: {
