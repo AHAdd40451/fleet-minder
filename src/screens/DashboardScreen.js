@@ -11,8 +11,13 @@ import {
   ActivityIndicator,
   Dimensions,
   Modal,
-  TextInput
+  TextInput,
+  Platform
 } from 'react-native';
+import * as ImagePicker from "expo-image-picker";
+import * as FileSystem from "expo-file-system/legacy";
+import Tesseract from "tesseract.js";
+import { validateVIN, validateYear, validateNumeric, validateRequired } from '../utils/validation';
 import { supabase } from '../lib/supabase';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -20,17 +25,34 @@ const { width } = Dimensions.get('window');
 
 const DashboardScreen = ({ navigation }) => {
   const [companyData, setCompanyData] = useState(null);
-  const [vehicleData, setVehicleData] = useState(null);
+  const [vehiclesData, setVehiclesData] = useState([]);
   const [userData, setUserData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [editModalVisible, setEditModalVisible] = useState(false);
-  const [editFormData, setEditFormData] = useState({
+  const [addVehicleModalVisible, setAddVehicleModalVisible] = useState(false);
+  const [editVehicleModalVisible, setEditVehicleModalVisible] = useState(false);
+  const [editingVehicle, setEditingVehicle] = useState(null);
+  const [editCompanyModalVisible, setEditCompanyModalVisible] = useState(false);
+  const [editCompanyFormData, setEditCompanyFormData] = useState({
     name: '',
     country: '',
     state: ''
   });
-  const [editLoading, setEditLoading] = useState(false);
+  const [editCompanyLoading, setEditCompanyLoading] = useState(false);
+  const [vehicleFormData, setVehicleFormData] = useState({
+    vin: '',
+    make: '',
+    model: '',
+    year: '',
+    mileage: '',
+    odometer: '',
+    color: ''
+  });
+  const [vehicleFormErrors, setVehicleFormErrors] = useState({});
+  const [vehicleFormLoading, setVehicleFormLoading] = useState(false);
+  const [vehicleFormSaving, setVehicleFormSaving] = useState(false);
+  const [vinImages, setVinImages] = useState([]);
+  const [meterImages, setMeterImages] = useState([]);
 
   const fetchUserData = async () => {
     try {
@@ -60,14 +82,15 @@ const DashboardScreen = ({ navigation }) => {
         if (companyError) throw companyError;
         setCompanyData(companies && companies.length > 0 ? companies[0] : null);
         
-        // Fetch vehicle data using user_id
+        // Fetch all vehicles data using user_id
         const { data: vehicles, error: vehicleError } = await supabase
           .from('vehicles')
           .select('*')
-          .eq('user_id', storedUserId);
+          .eq('user_id', storedUserId)
+          .order('created_at', { ascending: false });
         
         if (vehicleError) throw vehicleError;
-        setVehicleData(vehicles && vehicles.length > 0 ? vehicles[0] : null);
+        setVehiclesData(vehicles || []);
       } else if (storedPhone) {
         // Fallback: Use stored phone to fetch data
         const { data: users, error: userError } = await supabase
@@ -90,14 +113,15 @@ const DashboardScreen = ({ navigation }) => {
         if (companyError) throw companyError;
         setCompanyData(companies && companies.length > 0 ? companies[0] : null);
         
-        // Fetch vehicle data using user_id
+        // Fetch all vehicles data using user_id
         const { data: vehicles, error: vehicleError } = await supabase
           .from('vehicles')
           .select('*')
-          .eq('user_id', users.id);
+          .eq('user_id', users.id)
+          .order('created_at', { ascending: false });
         
         if (vehicleError) throw vehicleError;
-        setVehicleData(vehicles && vehicles.length > 0 ? vehicles[0] : null);
+        setVehiclesData(vehicles || []);
       } else {
         // Last resort: Get the latest user data
         const { data: users, error: userError } = await supabase
@@ -123,14 +147,15 @@ const DashboardScreen = ({ navigation }) => {
           if (companyError) throw companyError;
           setCompanyData(companies && companies.length > 0 ? companies[0] : null);
           
-          // Fetch vehicle data using user_id
+          // Fetch all vehicles data using user_id
           const { data: vehicles, error: vehicleError } = await supabase
             .from('vehicles')
             .select('*')
-            .eq('user_id', user.id);
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
           
           if (vehicleError) throw vehicleError;
-          setVehicleData(vehicles && vehicles.length > 0 ? vehicles[0] : null);
+          setVehiclesData(vehicles || []);
         }
       }
     } catch (error) {
@@ -181,25 +206,34 @@ const DashboardScreen = ({ navigation }) => {
     fetchUserData();
   };
 
-  const openEditModal = () => {
+  const openEditCompanyModal = () => {
     if (companyData) {
-      setEditFormData({
+      setEditCompanyFormData({
         name: companyData.name || '',
         country: companyData.country || '',
         state: companyData.state || ''
       });
-      setEditModalVisible(true);
+      setEditCompanyModalVisible(true);
     }
   };
 
-  const handleEditSave = async () => {
-    if (!editFormData.name.trim() || !editFormData.country.trim() || !editFormData.state.trim()) {
+  const closeEditCompanyModal = () => {
+    setEditCompanyModalVisible(false);
+    setEditCompanyFormData({
+      name: '',
+      country: '',
+      state: ''
+    });
+  };
+
+  const handleEditCompanySave = async () => {
+    if (!editCompanyFormData.name.trim() || !editCompanyFormData.country.trim() || !editCompanyFormData.state.trim()) {
       Alert.alert('Error', 'All fields are required');
       return;
     }
 
     try {
-      setEditLoading(true);
+      setEditCompanyLoading(true);
       
       const storedUserId = await AsyncStorage.getItem('userId');
       if (!storedUserId) {
@@ -212,9 +246,9 @@ const DashboardScreen = ({ navigation }) => {
         .upsert({
           id: companyData.id, // Include company ID to update existing record
           user_id: storedUserId,
-          name: editFormData.name.trim(),
-          country: editFormData.country.trim(),
-          state: editFormData.state.trim()
+          name: editCompanyFormData.name.trim(),
+          country: editCompanyFormData.country.trim(),
+          state: editCompanyFormData.state.trim()
         });
 
       if (error) throw error;
@@ -222,20 +256,329 @@ const DashboardScreen = ({ navigation }) => {
       // Update local state
       setCompanyData(prev => ({
         ...prev,
-        name: editFormData.name.trim(),
-        country: editFormData.country.trim(),
-        state: editFormData.state.trim()
+        name: editCompanyFormData.name.trim(),
+        country: editCompanyFormData.country.trim(),
+        state: editCompanyFormData.state.trim()
       }));
 
-      setEditModalVisible(false);
+      closeEditCompanyModal();
       Alert.alert('Success', 'Company information updated successfully!');
     } catch (error) {
       console.error('Error updating company:', error);
       Alert.alert('Error', 'Failed to update company information. Please try again.');
     } finally {
-      setEditLoading(false);
+      setEditCompanyLoading(false);
     }
   };
+
+  const openAddVehicleModal = () => {
+    setVehicleFormData({
+      vin: '',
+    
+      mileage: '',
+      odometer: '',
+      color: ''
+    });
+    setVehicleFormErrors({});
+    setVinImages([]);
+    setMeterImages([]);
+    setAddVehicleModalVisible(true);
+  };
+
+  const closeAddVehicleModal = () => {
+    setAddVehicleModalVisible(false);
+    setVehicleFormData({
+      vin: '',
+ 
+      mileage: '',
+      odometer: '',
+      color: ''
+    });
+    setVehicleFormErrors({});
+    setVinImages([]);
+    setMeterImages([]);
+  };
+
+  const openEditVehicleModal = (vehicle) => {
+    setEditingVehicle(vehicle);
+    setVehicleFormData({
+      vin: vehicle.vin || '',
+      make: vehicle.make || '',
+      model: vehicle.model || '',
+      year: vehicle.year ? vehicle.year.toString() : '',
+      mileage: vehicle.mileage ? vehicle.mileage.toString() : '',
+      odometer: vehicle.odometer ? vehicle.odometer.toString() : '',
+      color: vehicle.color || ''
+    });
+    setVehicleFormErrors({});
+    setVinImages([]);
+    setMeterImages([]);
+    setEditVehicleModalVisible(true);
+  };
+
+  const closeEditVehicleModal = () => {
+    setEditVehicleModalVisible(false);
+    setEditingVehicle(null);
+    setVehicleFormData({
+      vin: '',
+      make: '',
+      model: '',
+      year: '',
+      mileage: '',
+      odometer: '',
+      color: ''
+    });
+    setVehicleFormErrors({});
+    setVinImages([]);
+    setMeterImages([]);
+  };
+
+  const pickImages = async (setter, type) => {
+    try {
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        allowsMultipleSelection: true,
+        quality: 1,
+      });
+      if (!result.canceled) {
+        const newImages = result.assets.map(asset => asset.uri);
+        setter(prev => [...prev, ...newImages]);
+        
+        // Process the first image for OCR if it's a new image
+        if (newImages.length > 0) {
+          const firstImage = newImages[0];
+          if (type === "vin") {
+            await extractVin(firstImage);
+          } else if (type === "meter") {
+            await extractOdometer(firstImage);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Error picking images:", err);
+      Alert.alert("Error", "Failed to open image library");
+    }
+  };
+
+  const removeImage = (imageUri, setter) => {
+    setter(prev => prev.filter(uri => uri !== imageUri));
+  };
+
+  const getBase64 = async (imageUri) => {
+    if (Platform.OS === "web") {
+      const response = await fetch(imageUri);
+      const blob = await response.blob();
+      const reader = new FileReader();
+      return new Promise((resolve, reject) => {
+        reader.onerror = reject;
+        reader.onload = () => {
+          const dataUrl = reader.result;
+          const base64 = dataUrl.split(",")[1];
+          resolve(base64);
+        };
+        reader.readAsDataURL(blob);
+      });
+    } else {
+      return await FileSystem.readAsStringAsync(imageUri, {
+        encoding: "base64",
+      });
+    }
+  };
+
+  const extractVin = async (imageUri) => {
+    try {
+      setVehicleFormLoading(true);
+      const b64 = await getBase64(imageUri);
+      const buffer = `data:image/jpeg;base64,${b64}`;
+
+      const { data: { text } } = await Tesseract.recognize(buffer, "eng", {
+        logger: (m) => console.log("VIN OCR:", m),
+        tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
+        psm: Tesseract.PSM.SINGLE_LINE,
+      });
+
+      console.log("VIN OCR raw:", text);
+
+      const clean = text.replace(/\s+/g, "").toUpperCase();
+      const vinMatch = clean.match(/[A-HJ-NPR-Z0-9]{17}/);
+      if (vinMatch && vinMatch[0].length === 17) {
+        const detected = vinMatch[0];
+        setVehicleFormData(prev => ({ ...prev, vin: detected }));
+        Alert.alert("VIN Detected", detected);
+      }
+
+      const yearMatch = text.match(/20\d{2}|19\d{2}/);
+      if (yearMatch) setVehicleFormData(prev => ({ ...prev, year: yearMatch[0] }));
+
+      const makeMatch = text.match(
+        /(TOYOTA|HONDA|FORD|CHEVROLET|BMW|NISSAN|TESLA|MERCEDES|HYUNDAI|KIA|VOLKSWAGEN|JEEP|DODGE)/i
+      );
+      if (makeMatch) setVehicleFormData(prev => ({ ...prev, make: makeMatch[0].toUpperCase() }));
+
+      const modelMatch = text.match(
+        /(CIVIC|COROLLA|CAMRY|F150|MODEL\s?3|ACCORD|ALTIMA|SONATA|TUCSON|GOLF|CHARGER|WRANGLER)/i
+      );
+      if (modelMatch) setVehicleFormData(prev => ({ ...prev, model: modelMatch[0].toUpperCase() }));
+    } catch (err) {
+      console.error("Error in extractVin:", err);
+      Alert.alert("Error", "Could not read VIN");
+    } finally {
+      setVehicleFormLoading(false);
+    }
+  };
+
+  const extractOdometer = async (imageUri) => {
+    try {
+      setVehicleFormLoading(true);
+      const b64 = await getBase64(imageUri);
+      const buffer = `data:image/jpeg;base64,${b64}`;
+
+      const { data: { text } } = await Tesseract.recognize(buffer, "eng", {
+        logger: (m) => console.log("Odometer OCR:", m),
+        tessedit_char_whitelist: "0123456789",
+        psm: Tesseract.PSM.SINGLE_LINE,
+      });
+
+      console.log("Odometer OCR raw:", text);
+
+      const justDigits = text.replace(/\D/g, "");
+      const match = justDigits.match(/\d{4,7}/);
+      if (match) {
+        const reading = match[0];
+        setVehicleFormData(prev => ({ 
+          ...prev, 
+          odometer: reading,
+          mileage: reading 
+        }));
+        Alert.alert("Odometer Detected", reading);
+      } else {
+        Alert.alert(
+          "No Reading Found",
+          "Could not detect a valid odometer value. Try clearer image."
+        );
+      }
+    } catch (err) {
+      console.error("Error in extractOdometer:", err);
+      Alert.alert("Error", "Could not read odometer");
+    } finally {
+      setVehicleFormLoading(false);
+    }
+  };
+
+  const validateVehicleForm = () => {
+    const newErrors = {};
+    
+    // Only validate VIN (optional but if provided, must be valid)
+    if (vehicleFormData.vin && vehicleFormData.vin.trim()) {
+      const vinValidation = validateVIN(vehicleFormData.vin);
+      if (!vinValidation.isValid) {
+        newErrors.vin = vinValidation.message;
+      }
+    }
+    
+    // No validation needed for other fields since they're reference only
+    // and not saved to the database
+    
+    setVehicleFormErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleAddVehicle = async () => {
+    if (!validateVehicleForm()) {
+      return;
+    }
+    
+    try {
+      setVehicleFormSaving(true);
+      
+      // Get user_id from AsyncStorage
+      const storedUserId = await AsyncStorage.getItem('userId');
+      if (!storedUserId) {
+        Alert.alert("Error", "User not found. Please sign in first.");
+        return;
+      }
+
+      // Get company_id from companyData
+      if (!companyData || !companyData.id) {
+        Alert.alert("Error", "Company information not found. Please complete company setup first.");
+        return;
+      }
+
+      // Insert vehicle with both company_id and user_id references
+      const vehiclePayload = {
+        company_id: companyData.id,
+        user_id: storedUserId,
+        vin: vehicleFormData.vin || null,
+        color: vehicleFormData.color || null,
+        mileage: vehicleFormData.mileage ? Number(vehicleFormData.mileage) : null,
+        odometer: vehicleFormData.odometer ? Number(vehicleFormData.odometer) : null,
+        image_url: null, // You can add image upload functionality later
+      };
+      
+      const { error: vehErr } = await supabase.from("vehicles").insert(vehiclePayload);
+      if (vehErr) throw vehErr;
+
+      // Refresh vehicles data
+      await fetchUserData();
+      
+      // Close modal and show success
+      closeAddVehicleModal();
+      Alert.alert("Success", "Vehicle added successfully!");
+      
+    } catch (e) {
+      console.error("Error adding vehicle:", e);
+      Alert.alert("Error", e.message || "Failed to add vehicle. Please try again.");
+    } finally {
+      setVehicleFormSaving(false);
+    }
+  };
+
+  const handleUpdateVehicle = async () => {
+    if (!validateVehicleForm()) {
+      return;
+    }
+    
+    try {
+      setVehicleFormSaving(true);
+      
+      if (!editingVehicle || !editingVehicle.id) {
+        Alert.alert("Error", "Vehicle not found for editing.");
+        return;
+      }
+
+      // Update vehicle with new data
+      const vehiclePayload = {
+        vin: vehicleFormData.vin || null,
+        color: vehicleFormData.color || null,
+        mileage: vehicleFormData.mileage ? Number(vehicleFormData.mileage) : null,
+        odometer: vehicleFormData.odometer ? Number(vehicleFormData.odometer) : null,
+        image_url: editingVehicle.image_url, // Keep existing image_url
+      };
+      
+      const { error: vehErr } = await supabase
+        .from("vehicles")
+        .upsert({
+          id: editingVehicle.id,
+          ...vehiclePayload
+        });
+      
+      if (vehErr) throw vehErr;
+
+      // Refresh vehicles data
+      await fetchUserData();
+      
+      // Close modal and show success
+      closeEditVehicleModal();
+      Alert.alert("Success", "Vehicle updated successfully!");
+      
+    } catch (e) {
+      console.error("Error updating vehicle:", e);
+      Alert.alert("Error", e.message || "Failed to update vehicle. Please try again.");
+    } finally {
+      setVehicleFormSaving(false);
+    }
+  };
+
 
   const handleLogout = async () => {
     Alert.alert(
@@ -301,7 +644,7 @@ const DashboardScreen = ({ navigation }) => {
           </View>
           <Text style={styles.cardTitle}>Company Information</Text>
           {companyData && (
-            <TouchableOpacity style={styles.editButton} onPress={openEditModal}>
+            <TouchableOpacity style={styles.editButton} onPress={openEditCompanyModal}>
               <Text style={styles.editButtonText}>✏️ Edit</Text>
             </TouchableOpacity>
           )}
@@ -352,92 +695,103 @@ const DashboardScreen = ({ navigation }) => {
         )}
       </View>
 
-      {/* Vehicle Information Card */}
+      {/* Vehicles Information */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <View style={styles.cardIconContainer}>
             <Text style={styles.cardIcon}>🚗</Text>
           </View>
-          <Text style={styles.cardTitle}>Vehicle Information</Text>
+          <Text style={styles.cardTitle}>Vehicles ({vehiclesData.length})</Text>
+          <TouchableOpacity 
+            style={styles.addVehicleButton}
+            onPress={openAddVehicleModal}
+          >
+            <Text style={styles.addVehicleButtonText}>+ Add Vehicle</Text>
+          </TouchableOpacity>
         </View>
-        {vehicleData ? (
-          <View style={styles.infoContainer}>
-            <View style={styles.infoRow}>
-              <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>🔢</Text>
-                <Text style={styles.label}>VIN</Text>
-              </View>
-              <Text style={styles.value}>{vehicleData.vin || 'N/A'}</Text>
-            </View>
-            {/* Vehicle details - only show if columns exist */}
-            {vehicleData.make && (
-              <View style={styles.infoRow}>
-                <View style={styles.infoLabelContainer}>
-                  <Text style={styles.infoIcon}>🏭</Text>
-                  <Text style={styles.label}>Make</Text>
+        {vehiclesData.length > 0 ? (
+          <View style={styles.vehiclesContainer}>
+            {vehiclesData.map((vehicle, index) => (
+              <View key={vehicle.id || index} style={styles.vehicleCard}>
+                <View style={styles.vehicleHeader}>
+                  <View style={styles.vehicleTitleContainer}>
+                    <Text style={styles.vehicleTitle}>
+                      {vehicle.make && vehicle.model ? `${vehicle.make} ${vehicle.model}` : 'Vehicle'}
+                      {vehicle.year && ` (${vehicle.year})`}
+                    </Text>
+                    <Text style={styles.vehicleVin}>{vehicle.vin || 'No VIN'}</Text>
+                  </View>
+                  <TouchableOpacity 
+                    style={styles.editVehicleButton}
+                    onPress={() => openEditVehicleModal(vehicle)}
+                  >
+                    <Text style={styles.editVehicleButtonText}>✏️ Edit</Text>
+                  </TouchableOpacity>
                 </View>
-                <Text style={styles.value}>{vehicleData.make || 'N/A'}</Text>
-              </View>
-            )}
-            {vehicleData.model && (
-              <View style={styles.infoRow}>
-                <View style={styles.infoLabelContainer}>
-                  <Text style={styles.infoIcon}>🚙</Text>
-                  <Text style={styles.label}>Model</Text>
+                <View style={styles.vehicleDetails}>
+                  {vehicle.vin && (
+                    <View style={styles.vehicleDetailRow}>
+                      <Text style={styles.vehicleDetailLabel}>VIN:</Text>
+                      <Text style={styles.vehicleDetailValue}>{vehicle.vin}</Text>
+                    </View>
+                  )}
+                  {vehicle.make && (
+                    <View style={styles.vehicleDetailRow}>
+                      <Text style={styles.vehicleDetailLabel}>Make:</Text>
+                      <Text style={styles.vehicleDetailValue}>{vehicle.make}</Text>
+                    </View>
+                  )}
+                  {vehicle.model && (
+                    <View style={styles.vehicleDetailRow}>
+                      <Text style={styles.vehicleDetailLabel}>Model:</Text>
+                      <Text style={styles.vehicleDetailValue}>{vehicle.model}</Text>
+                    </View>
+                  )}
+                  {vehicle.year && (
+                    <View style={styles.vehicleDetailRow}>
+                      <Text style={styles.vehicleDetailLabel}>Year:</Text>
+                      <Text style={styles.vehicleDetailValue}>{vehicle.year}</Text>
+                    </View>
+                  )}
+                  {vehicle.color && (
+                    <View style={styles.vehicleDetailRow}>
+                      <Text style={styles.vehicleDetailLabel}>Color:</Text>
+                      <Text style={styles.vehicleDetailValue}>{vehicle.color}</Text>
+                    </View>
+                  )}
+                  {vehicle.mileage && (
+                    <View style={styles.vehicleDetailRow}>
+                      <Text style={styles.vehicleDetailLabel}>Mileage:</Text>
+                      <Text style={styles.vehicleDetailValue}>{vehicle.mileage}</Text>
+                    </View>
+                  )}
+                  {vehicle.odometer && (
+                    <View style={styles.vehicleDetailRow}>
+                      <Text style={styles.vehicleDetailLabel}>Odometer:</Text>
+                      <Text style={styles.vehicleDetailValue}>{vehicle.odometer}</Text>
+                    </View>
+                  )}
+                  <View style={styles.vehicleDetailRow}>
+                    <Text style={styles.vehicleDetailLabel}>Added:</Text>
+                    <Text style={styles.vehicleDetailValue}>{formatDate(vehicle.created_at)}</Text>
+                  </View>
                 </View>
-                <Text style={styles.value}>{vehicleData.model || 'N/A'}</Text>
+                {vehicle.image_url && (
+                  <Image source={{ uri: vehicle.image_url }} style={styles.vehicleImage} />
+                )}
               </View>
-            )}
-            {vehicleData.year && (
-              <View style={styles.infoRow}>
-                <View style={styles.infoLabelContainer}>
-                  <Text style={styles.infoIcon}>📅</Text>
-                  <Text style={styles.label}>Year</Text>
-                </View>
-                <Text style={styles.value}>{vehicleData.year || 'N/A'}</Text>
-              </View>
-            )}
-            {vehicleData.mileage && (
-              <View style={styles.infoRow}>
-                <View style={styles.infoLabelContainer}>
-                  <Text style={styles.infoIcon}>🛣️</Text>
-                  <Text style={styles.label}>Mileage</Text>
-                </View>
-                <Text style={styles.value}>{vehicleData.mileage || 'N/A'}</Text>
-              </View>
-            )}
-            {vehicleData.odometer && (
-              <View style={styles.infoRow}>
-                <View style={styles.infoLabelContainer}>
-                  <Text style={styles.infoIcon}>📊</Text>
-                  <Text style={styles.label}>Odometer</Text>
-                </View>
-                <Text style={styles.value}>{vehicleData.odometer || 'N/A'}</Text>
-              </View>
-            )}
-            {vehicleData.color && (
-              <View style={styles.infoRow}>
-                <View style={styles.infoLabelContainer}>
-                  <Text style={styles.infoIcon}>🎨</Text>
-                  <Text style={styles.label}>Color</Text>
-                </View>
-                <Text style={styles.value}>{vehicleData.color || 'N/A'}</Text>
-              </View>
-            )}
-            {vehicleData.image_url && (
-              <View style={styles.imageContainer}>
-                <View style={styles.infoLabelContainer}>
-                  <Text style={styles.infoIcon}>📸</Text>
-                  <Text style={styles.label}>Vehicle Image</Text>
-                </View>
-                <Image source={{ uri: vehicleData.image_url }} style={styles.vehicleImage} />
-              </View>
-            )}
+            ))}
           </View>
         ) : (
           <View style={styles.noDataContainer}>
             <Text style={styles.noDataIcon}>🚫</Text>
-            <Text style={styles.noDataText}>No vehicle data available</Text>
+            <Text style={styles.noDataText}>No vehicles added yet</Text>
+            <TouchableOpacity 
+              style={styles.addFirstVehicleButton}
+              onPress={openAddVehicleModal}
+            >
+              <Text style={styles.addFirstVehicleButtonText}>+ Add Your First Vehicle</Text>
+            </TouchableOpacity>
           </View>
         )}
       </View>
@@ -500,35 +854,476 @@ const DashboardScreen = ({ navigation }) => {
         )}
       </View>
 
-      {/* Action Buttons */}
-      <View style={styles.actionsContainer}>
-        <TouchableOpacity 
-          style={styles.actionButton}
-          onPress={() => navigation.navigate('Onboarding')}
-        >
-          <View style={styles.buttonContent}>
-            <Text style={styles.buttonIcon}>✏️</Text>
-            <Text style={styles.actionButtonText}>Edit Information</Text>
+      {/* Add Vehicle Modal */}
+      <Modal
+        visible={addVehicleModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={closeAddVehicleModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Add New Vehicle</Text>
+              <TouchableOpacity 
+                style={styles.closeButton}
+                onPress={closeAddVehicleModal}
+              >
+                <Text style={styles.closeButtonText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>VIN (Optional)</Text>
+                <TextInput
+                  style={[styles.modalInput, vehicleFormErrors.vin && styles.inputError]}
+                  value={vehicleFormData.vin}
+                  onChangeText={(text) => {
+                    setVehicleFormData(prev => ({ ...prev, vin: text }));
+                    if (vehicleFormErrors.vin) {
+                      setVehicleFormErrors(prev => ({ ...prev, vin: null }));
+                    }
+                  }}
+                  placeholder="Enter VIN number"
+                  placeholderTextColor="#666"
+                />
+                {vehicleFormErrors.vin && <Text style={styles.errorText}>{vehicleFormErrors.vin}</Text>}
+              </View>
+              
+              
+              
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Color (Optional)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={vehicleFormData.color}
+                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, color: text }))}
+                  placeholder="Enter vehicle color"
+                  placeholderTextColor="#666"
+                />
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Make (Reference Only)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={vehicleFormData.make}
+                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, make: text }))}
+                  placeholder="Enter vehicle make"
+                  placeholderTextColor="#666"
+                />
+                <Text style={styles.helpText}>For reference only - not saved to database</Text>
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Model (Reference Only)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={vehicleFormData.model}
+                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, model: text }))}
+                  placeholder="Enter vehicle model"
+                  placeholderTextColor="#666"
+                />
+                <Text style={styles.helpText}>For reference only - not saved to database</Text>
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Year (Reference Only)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={vehicleFormData.year}
+                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, year: text }))}
+                  placeholder="Enter vehicle year"
+                  placeholderTextColor="#666"
+                  keyboardType="numeric"
+                />
+                <Text style={styles.helpText}>For reference only - not saved to database</Text>
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Mileage (Optional)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={vehicleFormData.mileage}
+                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, mileage: text }))}
+                  placeholder="Enter current mileage"
+                  placeholderTextColor="#666"
+                  keyboardType="numeric"
+                />
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Make (Reference Only)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={vehicleFormData.make}
+                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, make: text }))}
+                  placeholder="Enter vehicle make"
+                  placeholderTextColor="#666"
+                />
+                <Text style={styles.helpText}>For reference only - not saved to database</Text>
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Model (Reference Only)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={vehicleFormData.model}
+                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, model: text }))}
+                  placeholder="Enter vehicle model"
+                  placeholderTextColor="#666"
+                />
+                <Text style={styles.helpText}>For reference only - not saved to database</Text>
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Year (Reference Only)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={vehicleFormData.year}
+                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, year: text }))}
+                  placeholder="Enter vehicle year"
+                  placeholderTextColor="#666"
+                  keyboardType="numeric"
+                />
+                <Text style={styles.helpText}>For reference only - not saved to database</Text>
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Odometer (Optional)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={vehicleFormData.odometer}
+                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, odometer: text }))}
+                  placeholder="Enter odometer reading"
+                  placeholderTextColor="#666"
+                  keyboardType="numeric"
+                />
+              </View>
+
+              {/* VIN Images Section */}
+              <View style={styles.imageSection}>
+                <Text style={styles.sectionTitle}>VIN Images (Optional)</Text>
+                <TouchableOpacity
+                  style={styles.addImageButton}
+                  onPress={() => pickImages(setVinImages, "vin")}
+                >
+                  <Text style={styles.addImageText}>+ Add VIN Images</Text>
+                </TouchableOpacity>
+                {vinImages.length > 0 && (
+                  <View style={styles.imageGrid}>
+                    {vinImages.map((imageUri, index) => (
+                      <View key={index} style={styles.imageContainer}>
+                        <Image source={{ uri: imageUri }} style={styles.thumbnail} />
+                        <TouchableOpacity
+                          style={styles.removeButton}
+                          onPress={() => removeImage(imageUri, setVinImages)}
+                        >
+                          <Text style={styles.removeButtonText}>×</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              {/* Odometer Images Section */}
+              <View style={styles.imageSection}>
+                <Text style={styles.sectionTitle}>Odometer Images (Optional)</Text>
+                <TouchableOpacity
+                  style={styles.addImageButton}
+                  onPress={() => pickImages(setMeterImages, "meter")}
+                >
+                  <Text style={styles.addImageText}>+ Add Odometer Images</Text>
+                </TouchableOpacity>
+                {meterImages.length > 0 && (
+                  <View style={styles.imageGrid}>
+                    {meterImages.map((imageUri, index) => (
+                      <View key={index} style={styles.imageContainer}>
+                        <Image source={{ uri: imageUri }} style={styles.thumbnail} />
+                        <TouchableOpacity
+                          style={styles.removeButton}
+                          onPress={() => removeImage(imageUri, setMeterImages)}
+                        >
+                          <Text style={styles.removeButtonText}>×</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              {vehicleFormLoading && (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator color="#00E676" size="small" />
+                  <Text style={styles.loadingText}>Processing image...</Text>
+                </View>
+              )}
+            </ScrollView>
+            
+            <View style={styles.modalActions}>
+              <TouchableOpacity 
+                style={styles.cancelButton}
+                onPress={closeAddVehicleModal}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.saveButton, vehicleFormSaving && styles.saveButtonDisabled]}
+                onPress={handleAddVehicle}
+                disabled={vehicleFormSaving}
+              >
+                {vehicleFormSaving ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.saveButtonText}>Add Vehicle</Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
-        </TouchableOpacity>
-        
-        <TouchableOpacity 
-          style={[styles.actionButton, styles.secondaryButton]}
-          onPress={onRefresh}
-        >
-          <View style={styles.buttonContent}>
-            <Text style={styles.buttonIcon}>🔄</Text>
-            <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>Refresh Data</Text>
+        </View>
+      </Modal>
+
+      {/* Edit Vehicle Modal */}
+      <Modal
+        visible={editVehicleModalVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={closeEditVehicleModal}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Edit Vehicle</Text>
+              <TouchableOpacity 
+                style={styles.closeButton}
+                onPress={closeEditVehicleModal}
+              >
+                <Text style={styles.closeButtonText}>✕</Text>
+              </TouchableOpacity>
+            </View>
+            
+            <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>VIN (Optional)</Text>
+                <TextInput
+                  style={[styles.modalInput, vehicleFormErrors.vin && styles.inputError]}
+                  value={vehicleFormData.vin}
+                  onChangeText={(text) => {
+                    setVehicleFormData(prev => ({ ...prev, vin: text }));
+                    if (vehicleFormErrors.vin) {
+                      setVehicleFormErrors(prev => ({ ...prev, vin: null }));
+                    }
+                  }}
+                  placeholder="Enter VIN number"
+                  placeholderTextColor="#666"
+                />
+                {vehicleFormErrors.vin && <Text style={styles.errorText}>{vehicleFormErrors.vin}</Text>}
+              </View>
+              
+              
+              
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Color (Optional)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={vehicleFormData.color}
+                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, color: text }))}
+                  placeholder="Enter vehicle color"
+                  placeholderTextColor="#666"
+                />
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Make (Reference Only)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={vehicleFormData.make}
+                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, make: text }))}
+                  placeholder="Enter vehicle make"
+                  placeholderTextColor="#666"
+                />
+                <Text style={styles.helpText}>For reference only - not saved to database</Text>
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Model (Reference Only)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={vehicleFormData.model}
+                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, model: text }))}
+                  placeholder="Enter vehicle model"
+                  placeholderTextColor="#666"
+                />
+                <Text style={styles.helpText}>For reference only - not saved to database</Text>
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Year (Reference Only)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={vehicleFormData.year}
+                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, year: text }))}
+                  placeholder="Enter vehicle year"
+                  placeholderTextColor="#666"
+                  keyboardType="numeric"
+                />
+                <Text style={styles.helpText}>For reference only - not saved to database</Text>
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Mileage (Optional)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={vehicleFormData.mileage}
+                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, mileage: text }))}
+                  placeholder="Enter current mileage"
+                  placeholderTextColor="#666"
+                  keyboardType="numeric"
+                />
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Make (Reference Only)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={vehicleFormData.make}
+                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, make: text }))}
+                  placeholder="Enter vehicle make"
+                  placeholderTextColor="#666"
+                />
+                <Text style={styles.helpText}>For reference only - not saved to database</Text>
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Model (Reference Only)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={vehicleFormData.model}
+                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, model: text }))}
+                  placeholder="Enter vehicle model"
+                  placeholderTextColor="#666"
+                />
+                <Text style={styles.helpText}>For reference only - not saved to database</Text>
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Year (Reference Only)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={vehicleFormData.year}
+                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, year: text }))}
+                  placeholder="Enter vehicle year"
+                  placeholderTextColor="#666"
+                  keyboardType="numeric"
+                />
+                <Text style={styles.helpText}>For reference only - not saved to database</Text>
+              </View>
+              
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Odometer (Optional)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={vehicleFormData.odometer}
+                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, odometer: text }))}
+                  placeholder="Enter odometer reading"
+                  placeholderTextColor="#666"
+                  keyboardType="numeric"
+                />
+              </View>
+
+              {/* VIN Images Section */}
+              <View style={styles.imageSection}>
+                <Text style={styles.sectionTitle}>VIN Images (Optional)</Text>
+                <TouchableOpacity
+                  style={styles.addImageButton}
+                  onPress={() => pickImages(setVinImages, "vin")}
+                >
+                  <Text style={styles.addImageText}>+ Add VIN Images</Text>
+                </TouchableOpacity>
+                {vinImages.length > 0 && (
+                  <View style={styles.imageGrid}>
+                    {vinImages.map((imageUri, index) => (
+                      <View key={index} style={styles.imageContainer}>
+                        <Image source={{ uri: imageUri }} style={styles.thumbnail} />
+                        <TouchableOpacity
+                          style={styles.removeButton}
+                          onPress={() => removeImage(imageUri, setVinImages)}
+                        >
+                          <Text style={styles.removeButtonText}>×</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              {/* Odometer Images Section */}
+              <View style={styles.imageSection}>
+                <Text style={styles.sectionTitle}>Odometer Images (Optional)</Text>
+                <TouchableOpacity
+                  style={styles.addImageButton}
+                  onPress={() => pickImages(setMeterImages, "meter")}
+                >
+                  <Text style={styles.addImageText}>+ Add Odometer Images</Text>
+                </TouchableOpacity>
+                {meterImages.length > 0 && (
+                  <View style={styles.imageGrid}>
+                    {meterImages.map((imageUri, index) => (
+                      <View key={index} style={styles.imageContainer}>
+                        <Image source={{ uri: imageUri }} style={styles.thumbnail} />
+                        <TouchableOpacity
+                          style={styles.removeButton}
+                          onPress={() => removeImage(imageUri, setMeterImages)}
+                        >
+                          <Text style={styles.removeButtonText}>×</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              {vehicleFormLoading && (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator color="#00E676" size="small" />
+                  <Text style={styles.loadingText}>Processing image...</Text>
+                </View>
+              )}
+            </ScrollView>
+            
+            <View style={styles.modalActions}>
+              <TouchableOpacity 
+                style={styles.cancelButton}
+                onPress={closeEditVehicleModal}
+              >
+                <Text style={styles.cancelButtonText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity 
+                style={[styles.saveButton, vehicleFormSaving && styles.saveButtonDisabled]}
+                onPress={handleUpdateVehicle}
+                disabled={vehicleFormSaving}
+              >
+                {vehicleFormSaving ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.saveButtonText}>Update Vehicle</Text>
+                )}
+              </TouchableOpacity>
+            </View>
           </View>
-        </TouchableOpacity>
-      </View>
+        </View>
+      </Modal>
 
       {/* Edit Company Modal */}
       <Modal
-        visible={editModalVisible}
+        visible={editCompanyModalVisible}
         animationType="slide"
         transparent={true}
-        onRequestClose={() => setEditModalVisible(false)}
+        onRequestClose={closeEditCompanyModal}
       >
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
@@ -536,7 +1331,7 @@ const DashboardScreen = ({ navigation }) => {
               <Text style={styles.modalTitle}>Edit Company Information</Text>
               <TouchableOpacity 
                 style={styles.closeButton}
-                onPress={() => setEditModalVisible(false)}
+                onPress={closeEditCompanyModal}
               >
                 <Text style={styles.closeButtonText}>✕</Text>
               </TouchableOpacity>
@@ -547,8 +1342,8 @@ const DashboardScreen = ({ navigation }) => {
                 <Text style={styles.inputLabel}>Company Name</Text>
                 <TextInput
                   style={styles.modalInput}
-                  value={editFormData.name}
-                  onChangeText={(text) => setEditFormData(prev => ({ ...prev, name: text }))}
+                  value={editCompanyFormData.name}
+                  onChangeText={(text) => setEditCompanyFormData(prev => ({ ...prev, name: text }))}
                   placeholder="Enter company name"
                   placeholderTextColor="#666"
                 />
@@ -558,8 +1353,8 @@ const DashboardScreen = ({ navigation }) => {
                 <Text style={styles.inputLabel}>Country</Text>
                 <TextInput
                   style={styles.modalInput}
-                  value={editFormData.country}
-                  onChangeText={(text) => setEditFormData(prev => ({ ...prev, country: text }))}
+                  value={editCompanyFormData.country}
+                  onChangeText={(text) => setEditCompanyFormData(prev => ({ ...prev, country: text }))}
                   placeholder="Enter country"
                   placeholderTextColor="#666"
                 />
@@ -569,8 +1364,8 @@ const DashboardScreen = ({ navigation }) => {
                 <Text style={styles.inputLabel}>State</Text>
                 <TextInput
                   style={styles.modalInput}
-                  value={editFormData.state}
-                  onChangeText={(text) => setEditFormData(prev => ({ ...prev, state: text }))}
+                  value={editCompanyFormData.state}
+                  onChangeText={(text) => setEditCompanyFormData(prev => ({ ...prev, state: text }))}
                   placeholder="Enter state"
                   placeholderTextColor="#666"
                 />
@@ -580,16 +1375,16 @@ const DashboardScreen = ({ navigation }) => {
             <View style={styles.modalActions}>
               <TouchableOpacity 
                 style={styles.cancelButton}
-                onPress={() => setEditModalVisible(false)}
+                onPress={closeEditCompanyModal}
               >
                 <Text style={styles.cancelButtonText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[styles.saveButton, editLoading && styles.saveButtonDisabled]}
-                onPress={handleEditSave}
-                disabled={editLoading}
+                style={[styles.saveButton, editCompanyLoading && styles.saveButtonDisabled]}
+                onPress={handleEditCompanySave}
+                disabled={editCompanyLoading}
               >
-                {editLoading ? (
+                {editCompanyLoading ? (
                   <ActivityIndicator color="#fff" size="small" />
                 ) : (
                   <Text style={styles.saveButtonText}>Save Changes</Text>
@@ -778,42 +1573,97 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     marginTop: 10,
   },
-  actionsContainer: {
-    padding: 20,
-    gap: 16,
+  vehiclesContainer: {
+    gap: 12,
   },
-  actionButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.9)',
-    padding: 18,
-    borderRadius: 16,
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 8,
+  vehicleCard: {
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+    borderRadius: 12,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
-  buttonContent: {
+  vehicleHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 12,
   },
-  buttonIcon: {
-    fontSize: 18,
-    marginRight: 10,
+  vehicleTitleContainer: {
+    flex: 1,
   },
-  actionButtonText: {
-    color: '#000',
+  vehicleTitle: {
+    color: '#fff',
     fontSize: 16,
     fontWeight: '700',
-    letterSpacing: 0.3,
+    marginBottom: 4,
   },
-  secondaryButton: {
+  vehicleVin: {
+    color: '#b0b0b0',
+    fontSize: 12,
+    fontFamily: 'monospace',
+  },
+  editVehicleButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
-  secondaryButtonText: {
+  editVehicleButtonText: {
     color: '#fff',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  vehicleDetails: {
+    gap: 8,
+  },
+  vehicleDetailRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  vehicleDetailLabel: {
+    color: '#b0b0b0',
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  vehicleDetailValue: {
+    color: '#fff',
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  addVehicleButton: {
+    backgroundColor: 'rgba(0, 230, 118, 0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: 'rgba(0, 230, 118, 0.3)',
+  },
+  addVehicleButtonText: {
+    color: '#00E676',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  addFirstVehicleButton: {
+    backgroundColor: 'rgba(0, 230, 118, 0.9)',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 20,
+    marginTop: 15,
+    shadowColor: '#00E676',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
+  },
+  addFirstVehicleButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '700',
+    textAlign: 'center',
   },
   editButton: {
     backgroundColor: 'rgba(255, 255, 255, 0.1)',
@@ -839,7 +1689,8 @@ const styles = StyleSheet.create({
     backgroundColor: '#1a1a1a',
     borderRadius: 20,
     width: '100%',
-    maxWidth: 400,
+    maxWidth: 500,
+    maxHeight: '90%',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
     shadowColor: '#000',
@@ -877,6 +1728,7 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     padding: 20,
+    maxHeight: 400,
   },
   inputContainer: {
     marginBottom: 20,
@@ -895,6 +1747,77 @@ const styles = StyleSheet.create({
     padding: 15,
     color: '#fff',
     fontSize: 16,
+  },
+  inputError: {
+    borderColor: '#ff4444',
+    borderWidth: 1,
+  },
+  errorText: {
+    color: '#ff4444',
+    fontSize: 12,
+    marginTop: 5,
+    marginLeft: 5,
+  },
+  helpText: {
+    color: '#888',
+    fontSize: 12,
+    marginTop: 5,
+    fontStyle: 'italic',
+  },
+  imageSection: {
+    marginVertical: 15,
+  },
+  sectionTitle: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 10,
+  },
+  addImageButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderStyle: 'dashed',
+  },
+  addImageText: {
+    color: '#fff',
+    fontSize: 14,
+  },
+  imageGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
+  imageContainer: {
+    position: 'relative',
+    width: 80,
+    height: 80,
+    marginBottom: 10,
+  },
+  thumbnail: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 8,
+  },
+  removeButton: {
+    position: 'absolute',
+    top: -5,
+    right: -5,
+    backgroundColor: '#ff4444',
+    borderRadius: 12,
+    width: 24,
+    height: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  removeButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
   modalActions: {
     flexDirection: 'row',
