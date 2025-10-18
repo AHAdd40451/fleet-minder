@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
-import Tesseract from "tesseract.js";
+import axios from 'axios';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../../lib/supabase";
 import { validateVIN, validateYear, validateNumeric, validateRequired } from "../../utils/validation";
@@ -86,13 +86,28 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
     try {
       setLoading(true);
       const b64 = await getBase64(imageUri);
-      const buffer = `data:image/jpeg;base64,${b64}`;
 
-      const { data: { text } } = await Tesseract.recognize(buffer, "eng", {
-        logger: (m) => console.log("VIN OCR:", m),
-        tessedit_char_whitelist: "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789",
-        psm: Tesseract.PSM.SINGLE_LINE,
-      });
+      // Call Google Vision API
+      const apiKey = 'AIzaSyBtesRKo3ZOQao2Pe5W13JPnW-JOCVpjow';
+      const endpoint = `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`;
+      const requestBody = {
+        requests: [
+          {
+            image: {
+              content: b64,
+            },
+            features: [
+              {
+                type: 'TEXT_DETECTION',
+                maxResults: 1,
+              },
+            ],
+          },
+        ],
+      };
+
+      const response = await axios.post(endpoint, requestBody);
+      const text = response.data.responses[0].fullTextAnnotation.text;
 
       console.log("VIN OCR raw:", text);
 
@@ -128,13 +143,28 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
     try {
       setLoading(true);
       const b64 = await getBase64(imageUri);
-      const buffer = `data:image/jpeg;base64,${b64}`;
 
-      const { data: { text } } = await Tesseract.recognize(buffer, "eng", {
-        logger: (m) => console.log("Odometer OCR:", m),
-        tessedit_char_whitelist: "0123456789",
-        psm: Tesseract.PSM.SINGLE_LINE,
-      });
+      // Call Google Vision API
+      const apiKey = 'AIzaSyBtesRKo3ZOQao2Pe5W13JPnW-JOCVpjow';
+      const endpoint = `https://vision.googleapis.com/v1/images:annotate?key=${apiKey}`;
+      const requestBody = {
+        requests: [
+          {
+            image: {
+              content: b64,
+            },
+            features: [
+              {
+                type: 'TEXT_DETECTION',
+                maxResults: 1,
+              },
+            ],
+          },
+        ],
+      };
+
+      const response = await axios.post(endpoint, requestBody);
+      const text = response.data.responses[0].fullTextAnnotation.text;
 
       console.log("Odometer OCR raw:", text);
 
