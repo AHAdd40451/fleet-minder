@@ -5,7 +5,7 @@ const Home = () => {
   return (
     <View >
                     
-                    <Text >Country</Text>
+                    <Text >pakistan</Text>
                   </View>
   )
 }
