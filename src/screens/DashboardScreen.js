@@ -638,14 +638,11 @@ const DashboardScreen = ({ navigation }) => {
 
       {/* Company Information Card */}
       <View style={styles.card}>
-        <View style={styles.cardHeader}>
-          <View style={styles.cardIconContainer}>
-            <Text style={styles.cardIcon}>🏢</Text>
-          </View>
+        <View style={styles.cardHeader}> 
           <Text style={styles.cardTitle}>Company Information</Text>
           {companyData && (
             <TouchableOpacity style={styles.editButton} onPress={openEditCompanyModal}>
-              <Text style={styles.editButtonText}>✏️ Edit</Text>
+              <Text style={styles.editButtonText}> Edit</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -653,35 +650,33 @@ const DashboardScreen = ({ navigation }) => {
           <View style={styles.infoContainer}>
             <View style={styles.infoRow}>
               <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>📋</Text>
                 <Text style={styles.label}>Company Name</Text>
               </View>
               <Text style={styles.value}>{companyData.name || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
               <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>📞</Text>
                 <Text style={styles.label}>Phone</Text>
               </View>
               <Text style={styles.value}>{companyData.phone || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
               <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>🌍</Text>
+             
                 <Text style={styles.label}>Country</Text>
               </View>
               <Text style={styles.value}>{companyData.country || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
               <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>📍</Text>
+             
                 <Text style={styles.label}>State</Text>
               </View>
               <Text style={styles.value}>{companyData.state || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
               <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>📅</Text>
+               
                 <Text style={styles.label}>Created</Text>
               </View>
               <Text style={styles.value}>{formatDate(companyData.created_at)}</Text>
@@ -689,7 +684,7 @@ const DashboardScreen = ({ navigation }) => {
           </View>
         ) : (
           <View style={styles.noDataContainer}>
-            <Text style={styles.noDataIcon}>📭</Text>
+          
             <Text style={styles.noDataText}>No company data available</Text>
           </View>
         )}
@@ -698,9 +693,6 @@ const DashboardScreen = ({ navigation }) => {
       {/* Vehicles Information */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <View style={styles.cardIconContainer}>
-            <Text style={styles.cardIcon}>🚗</Text>
-          </View>
           <Text style={styles.cardTitle}>Vehicles ({vehiclesData.length})</Text>
           <TouchableOpacity 
             style={styles.addVehicleButton}
@@ -725,7 +717,7 @@ const DashboardScreen = ({ navigation }) => {
                     style={styles.editVehicleButton}
                     onPress={() => openEditVehicleModal(vehicle)}
                   >
-                    <Text style={styles.editVehicleButtonText}>✏️ Edit</Text>
+                    <Text style={styles.editVehicleButtonText}> Edit</Text>
                   </TouchableOpacity>
                 </View>
                 <View style={styles.vehicleDetails}>
@@ -784,7 +776,6 @@ const DashboardScreen = ({ navigation }) => {
           </View>
         ) : (
           <View style={styles.noDataContainer}>
-            <Text style={styles.noDataIcon}>🚫</Text>
             <Text style={styles.noDataText}>No vehicles added yet</Text>
             <TouchableOpacity 
               style={styles.addFirstVehicleButton}
@@ -799,16 +790,14 @@ const DashboardScreen = ({ navigation }) => {
       {/* User Status Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <View style={styles.cardIconContainer}>
-            <Text style={styles.cardIcon}>👤</Text>
-          </View>
+      
           <Text style={styles.cardTitle}>Account Status</Text>
         </View>
         {userData ? (
           <View style={styles.infoContainer}>
             <View style={styles.infoRow}>
               <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>✅</Text>
+               
                 <Text style={styles.label}>Phone Verified</Text>
               </View>
               <View style={styles.statusContainer}>
@@ -817,14 +806,14 @@ const DashboardScreen = ({ navigation }) => {
                   { backgroundColor: userData.verified ? '#00E676' : '#FF6B35' }
                 ]}>
                   <Text style={styles.statusText}>
-                    {userData.verified ? '✓ Verified' : '⏳ Pending'}
+                    {userData.verified ? '✓ Verified' : ' Pending'}
                   </Text>
                 </View>
               </View>
             </View>
             <View style={styles.infoRow}>
               <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>📝</Text>
+
                 <Text style={styles.label}>Onboarding</Text>
               </View>
               <View style={styles.statusContainer}>
@@ -840,7 +829,7 @@ const DashboardScreen = ({ navigation }) => {
             </View>
             <View style={styles.infoRow}>
               <View style={styles.infoLabelContainer}>
-                <Text style={styles.infoIcon}>📅</Text>
+                
                 <Text style={styles.label}>Account Created</Text>
               </View>
               <Text style={styles.value}>{formatDate(userData.created_at)}</Text>
@@ -848,7 +837,7 @@ const DashboardScreen = ({ navigation }) => {
           </View>
         ) : (
           <View style={styles.noDataContainer}>
-            <Text style={styles.noDataIcon}>👤</Text>
+
             <Text style={styles.noDataText}>No user data available</Text>
           </View>
         )}
