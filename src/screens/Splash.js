@@ -52,7 +52,7 @@ const Splash = () => {
         style={styles.image}
       />
 
-      <Text style={styles.title}>Smart vehicle maintenance reminders. Never miss a service date again</Text>
+      <Text style={styles.title}>Smart assets maintenance reminders. Never miss a service date again</Text>
 
       <Text style={styles.paragraph}>
       Smart reminders. Better maintenance. Hassle-free fleet management.

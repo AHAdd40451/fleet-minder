@@ -285,7 +285,7 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Vehicle Information</Text>
+      <Text style={styles.title}>Assets Information</Text>
 
       <View>
         <TextInput

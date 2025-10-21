@@ -693,12 +693,12 @@ const DashboardScreen = ({ navigation }) => {
       {/* Vehicles Information */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          <Text style={styles.cardTitle}>Vehicles ({vehiclesData.length})</Text>
+          <Text style={styles.cardTitle}>Assets ({vehiclesData.length})</Text>
           <TouchableOpacity 
             style={styles.addVehicleButton}
             onPress={openAddVehicleModal}
           >
-            <Text style={styles.addVehicleButtonText}>+ Add Vehicle</Text>
+            <Text style={styles.addVehicleButtonText}>+ Add Assets</Text>
           </TouchableOpacity>
         </View>
         {vehiclesData.length > 0 ? (
@@ -708,7 +708,7 @@ const DashboardScreen = ({ navigation }) => {
                 <View style={styles.vehicleHeader}>
                   <View style={styles.vehicleTitleContainer}>
                     <Text style={styles.vehicleTitle}>
-                      {vehicle.make && vehicle.model ? `${vehicle.make} ${vehicle.model}` : 'Vehicle'}
+                      {vehicle.make && vehicle.model ? `${vehicle.make} ${vehicle.model}` : 'Assets'}
                       {vehicle.year && ` (${vehicle.year})`}
                     </Text>
                     <Text style={styles.vehicleVin}>{vehicle.vin || 'No VIN'}</Text>
