@@ -14,6 +14,7 @@ import {
   TextInput,
   Platform
 } from 'react-native';
+import Button from '../components/Button';
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import Tesseract from "tesseract.js";
@@ -631,9 +632,11 @@ const DashboardScreen = ({ navigation }) => {
     >
       <View style={styles.header}>
         <Text style={styles.title}>Fleet Dashboard</Text>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
+        <Button 
+          title="Logout" 
+          onPress={handleLogout}
+          variant="red"
+        />
       </View>
 
       {/* Company Information Card */}
@@ -641,9 +644,12 @@ const DashboardScreen = ({ navigation }) => {
         <View style={styles.cardHeader}> 
           <Text style={styles.cardTitle}>Company Information</Text>
           {companyData && (
-            <TouchableOpacity style={styles.editButton} onPress={openEditCompanyModal}>
-              <Text style={styles.editButtonText}> Edit</Text>
-            </TouchableOpacity>
+            <Button 
+              title="Edit" 
+              onPress={openEditCompanyModal}
+              variant="white"
+              style={{ minWidth: 140 }}
+            />
           )}
         </View>
         {companyData ? (
@@ -694,12 +700,11 @@ const DashboardScreen = ({ navigation }) => {
       <View style={styles.card}>
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>Assets ({vehiclesData.length})</Text>
-          <TouchableOpacity 
-            style={styles.addVehicleButton}
+          <Button 
+            title="+ Add Assets" 
             onPress={openAddVehicleModal}
-          >
-            <Text style={styles.addVehicleButtonText}>+ Add Assets</Text>
-          </TouchableOpacity>
+            variant="green"
+          />
         </View>
         {vehiclesData.length > 0 ? (
           <View style={styles.vehiclesContainer}>
@@ -713,12 +718,12 @@ const DashboardScreen = ({ navigation }) => {
                     </Text>
                     <Text style={styles.vehicleVin}>{vehicle.vin || 'No VIN'}</Text>
                   </View>
-                  <TouchableOpacity 
-                    style={styles.editVehicleButton}
+                  <Button 
+                    title="Edit" 
                     onPress={() => openEditVehicleModal(vehicle)}
-                  >
-                    <Text style={styles.editVehicleButtonText}> Edit</Text>
-                  </TouchableOpacity>
+                    variant="white"
+                    style={{ minWidth: 60 }}
+                  />
                 </View>
                 <View style={styles.vehicleDetails}>
                   {vehicle.vin && (
@@ -777,12 +782,12 @@ const DashboardScreen = ({ navigation }) => {
         ) : (
           <View style={styles.noDataContainer}>
             <Text style={styles.noDataText}>No vehicles added yet</Text>
-            <TouchableOpacity 
-              style={styles.addFirstVehicleButton}
+            <Button 
+              title="+ Add Your First Vehicle" 
               onPress={openAddVehicleModal}
-            >
-              <Text style={styles.addFirstVehicleButtonText}>+ Add Your First Vehicle</Text>
-            </TouchableOpacity>
+              variant="green"
+              style={{ marginTop: 15 }}
+            />
           </View>
         )}
       </View>
@@ -1050,23 +1055,19 @@ const DashboardScreen = ({ navigation }) => {
             </ScrollView>
             
             <View style={styles.modalActions}>
-              <TouchableOpacity 
-                style={styles.cancelButton}
+              <Button 
+                title="Cancel" 
                 onPress={closeAddVehicleModal}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.saveButton, vehicleFormSaving && styles.saveButtonDisabled]}
+                variant="white"
+                style={{ flex: 1, marginRight: 8 }}
+              />
+              <Button 
+                title={vehicleFormSaving ? "Adding..." : "Add Vehicle"} 
                 onPress={handleAddVehicle}
+                variant="green"
                 disabled={vehicleFormSaving}
-              >
-                {vehicleFormSaving ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Text style={styles.saveButtonText}>Add Vehicle</Text>
-                )}
-              </TouchableOpacity>
+                style={{ flex: 1, marginLeft: 8 }}
+              />
             </View>
           </View>
         </View>
@@ -1279,23 +1280,19 @@ const DashboardScreen = ({ navigation }) => {
             </ScrollView>
             
             <View style={styles.modalActions}>
-              <TouchableOpacity 
-                style={styles.cancelButton}
+              <Button 
+                title="Cancel" 
                 onPress={closeEditVehicleModal}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.saveButton, vehicleFormSaving && styles.saveButtonDisabled]}
+                variant="white"
+                style={{ flex: 1, marginRight: 8 }}
+              />
+              <Button 
+                title={vehicleFormSaving ? "Updating..." : "Update Vehicle"} 
                 onPress={handleUpdateVehicle}
+                variant="green"
                 disabled={vehicleFormSaving}
-              >
-                {vehicleFormSaving ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Text style={styles.saveButtonText}>Update Vehicle</Text>
-                )}
-              </TouchableOpacity>
+                style={{ flex: 1, marginLeft: 8 }}
+              />
             </View>
           </View>
         </View>
@@ -1356,23 +1353,19 @@ const DashboardScreen = ({ navigation }) => {
             </View>
             
             <View style={styles.modalActions}>
-              <TouchableOpacity 
-                style={styles.cancelButton}
+              <Button 
+                title="Cancel" 
                 onPress={closeEditCompanyModal}
-              >
-                <Text style={styles.cancelButtonText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity 
-                style={[styles.saveButton, editCompanyLoading && styles.saveButtonDisabled]}
+                variant="white"
+                style={{ flex: 1, marginRight: 8 }}
+              />
+              <Button 
+                title={editCompanyLoading ? "Saving..." : "Save Changes"} 
                 onPress={handleEditCompanySave}
+                variant="green"
                 disabled={editCompanyLoading}
-              >
-                {editCompanyLoading ? (
-                  <ActivityIndicator color="#fff" size="small" />
-                ) : (
-                  <Text style={styles.saveButtonText}>Save Changes</Text>
-                )}
-              </TouchableOpacity>
+                style={{ flex: 1, marginLeft: 8 }}
+              />
             </View>
           </View>
         </View>
@@ -1412,22 +1405,6 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     color: '#fff',
     letterSpacing: 0.5,
-  },
-  logoutButton: {
-    backgroundColor: 'rgba(255, 68, 68, 0.9)',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 25,
-    shadowColor: '#ff4444',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  logoutText: {
-    color: '#fff',
-    fontWeight: 'bold',
-    fontSize: 14,
   },
   card: {
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
@@ -1586,19 +1563,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontFamily: 'monospace',
   },
-  editVehicleButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  editVehicleButtonText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: '600',
-  },
   vehicleDetails: {
     gap: 8,
   },
@@ -1615,50 +1579,6 @@ const styles = StyleSheet.create({
   vehicleDetailValue: {
     color: '#fff',
     fontSize: 14,
-    fontWeight: '600',
-  },
-  addVehicleButton: {
-    backgroundColor: 'rgba(0, 230, 118, 0.2)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: 'rgba(0, 230, 118, 0.3)',
-  },
-  addVehicleButtonText: {
-    color: '#00E676',
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  addFirstVehicleButton: {
-    backgroundColor: 'rgba(0, 230, 118, 0.9)',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 20,
-    marginTop: 15,
-    shadowColor: '#00E676',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  addFirstVehicleButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
-    textAlign: 'center',
-  },
-  editButton: {
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  editButtonText: {
-    color: '#fff',
-    fontSize: 12,
     fontWeight: '600',
   },
   modalOverlay: {
@@ -1808,46 +1728,9 @@ const styles = StyleSheet.create({
   modalActions: {
     flexDirection: 'row',
     padding: 20,
-    gap: 15,
     marginTop: 10,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.1)',
-  },
-  cancelButton: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.1)',
-    padding: 15,
-    borderRadius: 12,
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  cancelButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  saveButton: {
-    flex: 1,
-    backgroundColor: '#00E676',
-    padding: 15,
-    borderRadius: 12,
-    alignItems: 'center',
-    shadowColor: '#00E676',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
-  },
-  saveButtonDisabled: {
-    backgroundColor: '#666',
-    shadowOpacity: 0,
-    elevation: 0,
-  },
-  saveButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '700',
   },
 });
 
