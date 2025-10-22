@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert } from "react-native";
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert, Animated } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { verifyOtp, checkUserExists } from "../services/otp";
 import AsyncStorage from "@react-native-async-storage/async-storage"; 
@@ -9,6 +9,8 @@ const { width } = Dimensions.get("window");
 const VerifyOtp = ({ navigation, route }) => {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
+  const [verified, setVerified] = useState(false);
+  const [fadeAnim] = useState(new Animated.Value(0));
   const phone = route?.params?.phone;
 
   const handlePress = (num) => {
@@ -38,8 +40,20 @@ const VerifyOtp = ({ navigation, route }) => {
       const verifyResult = await verifyOtp(phone, otp);
       if (!verifyResult.ok) {
         Alert.alert('Error', verifyResult.error || 'Invalid OTP');
+        setLoading(false);
         return;
       }
+
+      // Show verified state with animation
+      setVerified(true);
+      setLoading(false);
+      
+      // Animate the verified label
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }).start();
 
       // Store phone number and user_id for future use
       await AsyncStorage.setItem('userPhone', phone);
@@ -47,26 +61,29 @@ const VerifyOtp = ({ navigation, route }) => {
         await AsyncStorage.setItem('userId', verifyResult.user.id);
       }
 
-      // Route based on verification result
-      if (verifyResult.redirectTo === 'dashboard') {
-        // Existing user with completed onboarding - go to Dashboard
-        await AsyncStorage.setItem('isOnboardingComplete', 'true');
-        navigation.reset({ index: 0, routes: [{ name: 'Dashboard' }] });
-      } else if (verifyResult.redirectTo === 'onboarding') {
-        // New user or existing user without completed onboarding - go to Onboarding
-        await AsyncStorage.setItem('isOnboardingComplete', 'false');
-        navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] });
-      }
+      // Wait for 0.8 seconds before navigation
+      setTimeout(() => {
+        // Route based on verification result
+        if (verifyResult.redirectTo === 'dashboard') {
+          // Existing user with completed onboarding - go to Dashboard
+          AsyncStorage.setItem('isOnboardingComplete', 'true').then(() => {
+            navigation.reset({ index: 0, routes: [{ name: 'Dashboard' }] });
+          });
+        } else if (verifyResult.redirectTo === 'onboarding') {
+          // New user or existing user without completed onboarding - go to Onboarding
+          AsyncStorage.setItem('isOnboardingComplete', 'false').then(() => {
+            navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] });
+          });
+        }
+      }, 800);
     } catch (error) {
       Alert.alert('Error', 'Something went wrong. Please try again.');
-    } finally {
       setLoading(false);
     }
   };
 
   return (
     <View style={styles.container}>
-
       <TouchableOpacity
         style={styles.backButton}
         onPress={() => navigation.goBack()}
@@ -74,46 +91,57 @@ const VerifyOtp = ({ navigation, route }) => {
         <Ionicons name="arrow-back" size={24} color="#000" />
       </TouchableOpacity>
 
-      <Text style={styles.heading}>Enter your OTP</Text>
-      <Text style={styles.subText}>
-        Create a 4-digit PIN code that will be used every time you login
-      </Text>
+      {!verified ? (
+        <>
+          <Text style={styles.heading}>Enter your OTP</Text>
+          <Text style={styles.subText}>
+            Create a 4-digit PIN code that will be used every time you login
+          </Text>
 
-      <View style={styles.otpContainer}>
-        {[0, 1, 2, 3].map((i) => (
-          <View key={i} style={styles.otpBox}>
-            <Text style={styles.otpText}>{otp[i] || ""}</Text>
+          <View style={styles.otpContainer}>
+            {[0, 1, 2, 3].map((i) => (
+              <View key={i} style={styles.otpBox}>
+                <Text style={styles.otpText}>{otp[i] || ""}</Text>
+              </View>
+            ))}
           </View>
-        ))}
-      </View>
 
-      <Text style={styles.warning}>Never share your OTP with anyone</Text>
+          <Text style={styles.warning}>Never share your OTP with anyone</Text>
 
+          <View style={styles.keypad}>
+            {["1","2","3","4","5","6","7","8","9","0"].map((num) => (
+              <TouchableOpacity
+                key={num}
+                style={styles.key}
+                onPress={() => handlePress(num)}
+              >
+                <Text style={styles.keyText}>{num}</Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity style={styles.key} onPress={handleDelete}>
+              <Text style={styles.keyText}>⌫</Text>
+            </TouchableOpacity>
+          </View>
 
-      <View style={styles.keypad}>
-        {["1","2","3","4","5","6","7","8","9","0"].map((num) => (
-          <TouchableOpacity
-            key={num}
-            style={styles.key}
-            onPress={() => handlePress(num)}
+          <TouchableOpacity 
+            style={[styles.continueButton, loading && styles.buttonDisabled]} 
+            onPress={handleContinue}
+            disabled={loading}
           >
-            <Text style={styles.keyText}>{num}</Text>
+            <Text style={styles.continueText}>
+              {loading ? 'Verifying...' : 'Continue'}
+            </Text>
           </TouchableOpacity>
-        ))}
-        <TouchableOpacity style={styles.key} onPress={handleDelete}>
-          <Text style={styles.keyText}>⌫</Text>
-        </TouchableOpacity>
-      </View>
-
-      <TouchableOpacity 
-        style={[styles.continueButton, loading && styles.buttonDisabled]} 
-        onPress={handleContinue}
-        disabled={loading}
-      >
-        <Text style={styles.continueText}>
-          {loading ? 'Verifying...' : 'Continue'}
-        </Text>
-      </TouchableOpacity>
+        </>
+      ) : (
+        <Animated.View style={[styles.verifiedContainer, { opacity: fadeAnim }]}>
+          <View style={styles.verifiedIcon}>
+            <Ionicons name="checkmark-circle" size={80} color="#4CAF50" />
+          </View>
+          <Text style={styles.verifiedText}>Verified!</Text>
+          <Text style={styles.verifiedSubText}>Redirecting...</Text>
+        </Animated.View>
+      )}
     </View>
   );
 };
@@ -204,5 +232,27 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  verifiedContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+  },
+  verifiedIcon: {
+    marginBottom: 20,
+  },
+  verifiedText: {
+    fontSize: 28,
+    fontWeight: 'bold',
+    color: '#4CAF50',
+    textAlign: 'center',
+    marginBottom: 10,
+  },
+  verifiedSubText: {
+    fontSize: 16,
+    color: '#FFFFFF',
+    textAlign: 'center',
+    opacity: 0.8,
   },
 });
