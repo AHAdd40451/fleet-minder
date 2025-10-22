@@ -877,7 +877,7 @@ const DashboardScreen = ({ navigation }) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContainer}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add New Vehicle</Text>
+              <Text style={styles.modalTitle}>Add New Assets</Text>
               <TouchableOpacity 
                 style={styles.closeButton}
                 onPress={closeAddVehicleModal}
@@ -890,7 +890,7 @@ const DashboardScreen = ({ navigation }) => {
               <View style={styles.inputContainer}>
                       {/* VIN Images Section */}
               <View style={styles.imageSection}>
-                <Text style={styles.sectionTitle}>VIN Images (Optional)</Text>
+                <Text style={styles.sectionTitle}>VIN Images</Text>
                 <TouchableOpacity
                   style={styles.addImageButton}
                   onPress={() => pickImages(setVinImages, "vin")}
@@ -916,7 +916,7 @@ const DashboardScreen = ({ navigation }) => {
 
               {/* Odometer Images Section */}
               <View style={styles.imageSection}>
-                <Text style={styles.sectionTitle}>Odometer Images (Optional)</Text>
+                <Text style={styles.sectionTitle}>Odometer Images</Text>
                 <TouchableOpacity
                   style={styles.addImageButton}
                   onPress={() => pickImages(setMeterImages, "meter")}
@@ -946,7 +946,7 @@ const DashboardScreen = ({ navigation }) => {
                   <Text style={styles.loadingText}>Processing image...</Text>
                 </View>
               )}
-                <Text style={styles.inputLabel}>Asset Name (Optional)</Text>
+                <Text style={styles.inputLabel}>Asset Name</Text>
                 <TextInput
                   style={styles.modalInput}
                   value={vehicleFormData.asset_name}
@@ -957,7 +957,7 @@ const DashboardScreen = ({ navigation }) => {
               </View>
               
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>VIN (Optional)</Text>
+                <Text style={styles.inputLabel}>VIN</Text>
                 <TextInput
                   style={[styles.modalInput, vehicleFormErrors.vin && styles.inputError]}
                   value={vehicleFormData.vin}
@@ -974,47 +974,47 @@ const DashboardScreen = ({ navigation }) => {
               </View>
               
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Color (Optional)</Text>
+                <Text style={styles.inputLabel}>Color </Text>
                 <TextInput
                   style={styles.modalInput}
                   value={vehicleFormData.color}
                   onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, color: text }))}
-                  placeholder="Enter vehicle color"
+                  placeholder="Enter asset color"
                   placeholderTextColor="#666"
                 />
               </View>
               
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Make (Reference Only)</Text>
+                <Text style={styles.inputLabel}>Make </Text>
                 <TextInput
                   style={styles.modalInput}
                   value={vehicleFormData.make}
                   onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, make: text }))}
-                  placeholder="Enter vehicle make"
+                  placeholder="Enter asset make"
                   placeholderTextColor="#666"
                 />
                 <Text style={styles.helpText}>For reference only - not saved to database</Text>
               </View>
               
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Model (Reference Only)</Text>
+                <Text style={styles.inputLabel}>Model </Text>
                 <TextInput
                   style={styles.modalInput}
                   value={vehicleFormData.model}
                   onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, model: text }))}
-                  placeholder="Enter vehicle model"
+                  placeholder="Enter asset model"
                   placeholderTextColor="#666"
                 />
                 <Text style={styles.helpText}>For reference only - not saved to database</Text>
               </View>
               
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Year (Reference Only)</Text>
+                <Text style={styles.inputLabel}>Year </Text>
                 <TextInput
                   style={styles.modalInput}
                   value={vehicleFormData.year}
                   onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, year: text }))}
-                  placeholder="Enter vehicle year"
+                  placeholder="Enter asset year"
                   placeholderTextColor="#666"
                   keyboardType="numeric"
                 />
@@ -1022,7 +1022,7 @@ const DashboardScreen = ({ navigation }) => {
               </View>
               
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Mileage (Optional)</Text>
+                <Text style={styles.inputLabel}>Mileage </Text>
                 <TextInput
                   style={styles.modalInput}
                   value={vehicleFormData.mileage}
@@ -1034,36 +1034,36 @@ const DashboardScreen = ({ navigation }) => {
               </View>
               
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Make (Reference Only)</Text>
+                <Text style={styles.inputLabel}>Make </Text>
                 <TextInput
                   style={styles.modalInput}
                   value={vehicleFormData.make}
                   onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, make: text }))}
-                  placeholder="Enter vehicle make"
+                  placeholder="Enter asset make"
                   placeholderTextColor="#666"
                 />
                 <Text style={styles.helpText}>For reference only - not saved to database</Text>
               </View>
               
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Model (Reference Only)</Text>
+                <Text style={styles.inputLabel}>Model </Text>
                 <TextInput
                   style={styles.modalInput}
                   value={vehicleFormData.model}
                   onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, model: text }))}
-                  placeholder="Enter vehicle model"
+                  placeholder="Enter asset model"
                   placeholderTextColor="#666"
                 />
                 <Text style={styles.helpText}>For reference only - not saved to database</Text>
               </View>
               
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Year (Reference Only)</Text>
+                <Text style={styles.inputLabel}>Year </Text>
                 <TextInput
                   style={styles.modalInput}
                   value={vehicleFormData.year}
                   onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, year: text }))}
-                  placeholder="Enter vehicle year"
+                  placeholder="Enter asset year"
                   placeholderTextColor="#666"
                   keyboardType="numeric"
                 />
@@ -1071,7 +1071,7 @@ const DashboardScreen = ({ navigation }) => {
               </View>
               
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Odometer (Optional)</Text>
+                <Text style={styles.inputLabel}>Odometer </Text>
                 <TextInput
                   style={styles.modalInput}
                   value={vehicleFormData.odometer}
@@ -1093,7 +1093,7 @@ const DashboardScreen = ({ navigation }) => {
                 style={{ flex: 1, marginRight: 8 }}
               />
               <Button 
-                title={vehicleFormSaving ? "Adding..." : "Add Vehicle"} 
+                title={vehicleFormSaving ? "Adding..." : "Add Asset"} 
                 onPress={handleAddVehicle}
                 variant="green"
                 disabled={vehicleFormSaving}
@@ -1216,7 +1216,7 @@ const DashboardScreen = ({ navigation }) => {
                   style={styles.modalInput}
                   value={vehicleFormData.color}
                   onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, color: text }))}
-                  placeholder="Enter vehicle color"
+                  placeholder="Enter asset color"
                   placeholderTextColor="#666"
                 />
               </View>
@@ -1227,7 +1227,7 @@ const DashboardScreen = ({ navigation }) => {
                   style={styles.modalInput}
                   value={vehicleFormData.make}
                   onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, make: text }))}
-                  placeholder="Enter vehicle make"
+                  placeholder="Enter asset make"
                   placeholderTextColor="#666"
                 />
                 <Text style={styles.helpText}>For reference only - not saved to database</Text>
@@ -1239,7 +1239,7 @@ const DashboardScreen = ({ navigation }) => {
                   style={styles.modalInput}
                   value={vehicleFormData.model}
                   onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, model: text }))}
-                  placeholder="Enter vehicle model"
+                  placeholder="Enter asset model"
                   placeholderTextColor="#666"
                 />
                 <Text style={styles.helpText}>For reference only - not saved to database</Text>
@@ -1251,7 +1251,7 @@ const DashboardScreen = ({ navigation }) => {
                   style={styles.modalInput}
                   value={vehicleFormData.year}
                   onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, year: text }))}
-                  placeholder="Enter vehicle year"
+                  placeholder="Enter asset year"
                   placeholderTextColor="#666"
                   keyboardType="numeric"
                 />
@@ -1276,7 +1276,7 @@ const DashboardScreen = ({ navigation }) => {
                   style={styles.modalInput}
                   value={vehicleFormData.make}
                   onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, make: text }))}
-                  placeholder="Enter vehicle make"
+                  placeholder="Enter asset make"
                   placeholderTextColor="#666"
                 />
                 <Text style={styles.helpText}>For reference only - not saved to database</Text>
@@ -1288,7 +1288,7 @@ const DashboardScreen = ({ navigation }) => {
                   style={styles.modalInput}
                   value={vehicleFormData.model}
                   onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, model: text }))}
-                  placeholder="Enter vehicle model"
+                  placeholder="Enter asset model"
                   placeholderTextColor="#666"
                 />
                 <Text style={styles.helpText}>For reference only - not saved to database</Text>
@@ -1300,7 +1300,7 @@ const DashboardScreen = ({ navigation }) => {
                   style={styles.modalInput}
                   value={vehicleFormData.year}
                   onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, year: text }))}
-                  placeholder="Enter vehicle year"
+                  placeholder="Enter asset year"
                   placeholderTextColor="#666"
                   keyboardType="numeric"
                 />
@@ -1330,7 +1330,7 @@ const DashboardScreen = ({ navigation }) => {
                 style={{ flex: 1, marginRight: 8,minWidth:10 }}
               />
               <Button 
-                title={vehicleFormSaving ? "Updating..." : "Update Vehicle"} 
+                title={vehicleFormSaving ? "Updating..." : "Update asset"} 
                 onPress={handleUpdateVehicle}
                 variant="green"
                 disabled={vehicleFormSaving}
