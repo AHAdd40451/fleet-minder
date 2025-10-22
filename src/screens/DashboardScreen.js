@@ -788,7 +788,7 @@ const DashboardScreen = ({ navigation }) => {
       </View>
 
       {/* User Status Card */}
-      <View style={styles.card}>
+      <View style={[styles.card, { marginBottom: 100 }]}>
         <View style={styles.cardHeader}>
       
           <Text style={styles.cardTitle}>Account Status</Text>
@@ -1432,6 +1432,7 @@ const styles = StyleSheet.create({
   card: {
     backgroundColor: 'rgba(255, 255, 255, 0.05)',
     margin: 15,
+    // marginBottom:100,
     padding: 20,
     borderRadius: 20,
     borderWidth: 1,

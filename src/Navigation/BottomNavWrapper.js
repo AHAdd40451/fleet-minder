@@ -219,6 +219,7 @@ export default function BottomNavWrapper() {
       width: 56,
       height: 56,
       borderRadius: 28,
+      marginBottom:20,
       backgroundColor: '#2C2C2E',
       justifyContent: 'center',
       alignItems: 'center',
