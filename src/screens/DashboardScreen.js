@@ -636,6 +636,7 @@ const DashboardScreen = ({ navigation }) => {
           title="Logout" 
           onPress={handleLogout}
           variant="red"
+          style={{minWidth:130}}
         />
       </View>
 
@@ -648,7 +649,7 @@ const DashboardScreen = ({ navigation }) => {
               title="Edit" 
               onPress={openEditCompanyModal}
               variant="white"
-              style={{ minWidth: 140 }}
+              style={{ minWidth: 120 }}
             />
           )}
         </View>
@@ -704,6 +705,7 @@ const DashboardScreen = ({ navigation }) => {
             title="+ Add Assets" 
             onPress={openAddVehicleModal}
             variant="green"
+            style={{ minWidth: 130 }}
           />
         </View>
         {vehiclesData.length > 0 ? (
@@ -722,7 +724,7 @@ const DashboardScreen = ({ navigation }) => {
                     title="Edit" 
                     onPress={() => openEditVehicleModal(vehicle)}
                     variant="white"
-                    style={{ minWidth: 60 }}
+                    style={{ minWidth: 130 }}
                   />
                 </View>
                 <View style={styles.vehicleDetails}>
@@ -1284,7 +1286,7 @@ const DashboardScreen = ({ navigation }) => {
                 title="Cancel" 
                 onPress={closeEditVehicleModal}
                 variant="white"
-                style={{ flex: 1, marginRight: 8 }}
+                style={{ flex: 1, marginRight: 8,minWidth:10 }}
               />
               <Button 
                 title={vehicleFormSaving ? "Updating..." : "Update Vehicle"} 

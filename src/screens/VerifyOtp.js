@@ -4,6 +4,7 @@ import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert, TextInput 
 import { Ionicons } from "@expo/vector-icons";
 import { verifyOtp, checkUserExists } from "../services/otp";
 import AsyncStorage from "@react-native-async-storage/async-storage"; 
+import Button from "../components/Button";
 
 const { width } = Dimensions.get("window");
 
@@ -99,7 +100,7 @@ const VerifyOtp = ({ navigation, route }) => {
 
       <Text style={styles.warning}>Never share your OTP with anyone</Text>
 
-      <TouchableOpacity 
+      {/* <TouchableOpacity 
         style={[styles.continueButton, loading && styles.buttonDisabled]} 
         onPress={handleContinue}
         disabled={loading}
@@ -107,7 +108,14 @@ const VerifyOtp = ({ navigation, route }) => {
         <Text style={styles.continueText}>
           {loading ? 'Verifying...' : 'Continue'}
         </Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
+      <Button
+      title={loading ? 'Verifying...' : 'Continue'}
+      onPress={handleContinue}
+      variant="white"
+  disabled={loading}
+  style={[ loading && styles.buttonDisabled]}
+      />
     </View>
   );
 };

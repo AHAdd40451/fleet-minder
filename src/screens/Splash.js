@@ -2,6 +2,7 @@ import { useNavigation } from '@react-navigation/native';
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, Image, TouchableOpacity, ActivityIndicator } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import Button from '../components/Button';
 
 const Splash = () => {
   const navigation = useNavigation();
@@ -58,12 +59,13 @@ const Splash = () => {
       Smart reminders. Better maintenance. Hassle-free fleet management.
       </Text>
 
-      <TouchableOpacity 
-        style={styles.button} 
+     
+      <Button
+        title="Join"
         onPress={handleJoin}
-      >
-        <Text style={styles.buttonText}>Join</Text>
-      </TouchableOpacity>
+        variant="white"
+        style={{ marginTop: 20, width: '100%' }} 
+      />
     </View>
   );
 };

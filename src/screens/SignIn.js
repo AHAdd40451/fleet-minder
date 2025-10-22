@@ -3,6 +3,7 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'reac
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { requestOtp } from '../services/otp';
+import Button from '../components/Button';
 
 const SignIn = () => {
   const navigation = useNavigation();
@@ -94,15 +95,14 @@ const SignIn = () => {
         <Text style={styles.errorText}>{phoneError}</Text>
       ) : null}
 
-      <TouchableOpacity 
-        style={[styles.button, loading && styles.buttonDisabled]} 
-        onPress={handleSubmit}
-        disabled={loading}
-      >
-        <Text style={styles.buttonText}>
-          {loading ? 'Sending...' : 'Submit'}
-        </Text>
-      </TouchableOpacity>
+      
+      <Button
+      title={loading ? 'Sending...' : 'Submit'}
+      onPress={handleSubmit}
+      variant="white"
+      disabled={loading}
+      style={[loading && styles.buttonDisabled]}
+      />
 
       {/* <View style={styles.dividerContainer}>
         <View style={styles.line} />

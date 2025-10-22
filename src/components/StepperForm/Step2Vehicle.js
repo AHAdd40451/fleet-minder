@@ -16,6 +16,7 @@ import Tesseract from "tesseract.js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../../lib/supabase";
 import { validateVIN, validateYear, validateNumeric, validateRequired } from "../../utils/validation";
+import Button from "../../components/Button"
 
 const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigation }) => {
   const [vin, setVin] = useState(data.vin || "");
@@ -438,18 +439,23 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
 
       {loading && <ActivityIndicator color="#fff" style={{ marginTop: 10 }} />}
 
+    
       <View style={styles.buttonsRow}>
-        <TouchableOpacity style={styles.btn} onPress={prevStep}>
-          <Text style={styles.btnText}>Back</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.btn, saving && styles.btnDisabled]} 
-          onPress={handleFinish}
-          disabled={saving}
-        >
-          <Text style={styles.btnText}>{saving ? "Saving..." : "Finish"}</Text>
-        </TouchableOpacity>
-      </View>
+  <Button
+    title="Back"
+    onPress={prevStep}
+    variant="white"
+    style={styles.btn}
+  />
+
+  <Button
+    title={saving ? "Saving..." : "Finish"}
+    onPress={handleFinish}
+    variant="white"
+    disabled={saving}
+    style={[styles.btn, saving && styles.btnDisabled]}
+  />
+</View>
     </View>
   );
 };
@@ -534,7 +540,7 @@ const styles = StyleSheet.create({
   },
   btn: {
     backgroundColor: "#fff",
-    padding: 15,
+    // padding: 15,
     borderRadius: 8,
     width: "48%",
   },

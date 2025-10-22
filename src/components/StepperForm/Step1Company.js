@@ -3,6 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "reac
 import { validateRequired } from "../../utils/validation";
 import { Picker } from "@react-native-picker/picker";
 import axios from 'axios';
+import Button from "../../components/Button";
 
 const Step1Company = ({ data, setData, nextStep }) => {
   const [companyName, setCompanyName] = useState(data.name || "");
@@ -204,9 +205,14 @@ const Step1Company = ({ data, setData, nextStep }) => {
         {errors.state && <Text style={styles.errorText}>{errors.state}</Text>}
       </View>
 
-      <TouchableOpacity style={styles.btn} onPress={handleNext}>
+      {/* <TouchableOpacity style={styles.btn} onPress={handleNext}>
         <Text style={styles.btnText}>Next</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
+      <Button
+      title='Next'
+      onPress={handleNext}
+      variant="white"
+      />
     </View>
   );
 };
