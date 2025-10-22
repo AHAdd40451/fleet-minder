@@ -8,10 +8,48 @@ const SignIn = () => {
   const navigation = useNavigation();
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
+
+  // Format phone number to only allow numeric characters
+  const formatPhoneNumber = (text) => {
+    // Remove all non-numeric characters
+    const numericOnly = text.replace(/[^0-9]/g, '');
+    return numericOnly;
+  };
+
+  // Validate phone number format
+  const validatePhoneNumber = (phoneNumber) => {
+    if (!phoneNumber || phoneNumber.length === 0) {
+      return 'Phone number is required';
+    }
+    if (phoneNumber.length < 10) {
+      return 'Phone number must be at least 10 digits';
+    }
+    if (phoneNumber.length > 15) {
+      return 'Phone number cannot exceed 15 digits';
+    }
+    // Check if it contains only numbers
+    if (!/^[0-9]+$/.test(phoneNumber)) {
+      return 'Phone number can only contain numbers';
+    }
+    return null;
+  };
+
+  const handlePhoneChange = (text) => {
+    const formattedPhone = formatPhoneNumber(text);
+    setPhone(formattedPhone);
+    
+    // Clear error when user starts typing
+    if (phoneError) {
+      setPhoneError('');
+    }
+  };
 
   const handleSubmit = async () => {
-    if (!phone || phone.length < 10) {
-      Alert.alert('Error', 'Please enter a valid phone number');
+    // Validate phone number
+    const validationError = validatePhoneNumber(phone);
+    if (validationError) {
+      setPhoneError(validationError);
       return;
     }
 
@@ -44,12 +82,17 @@ const SignIn = () => {
       <TextInput
         placeholder="Phone Number"
         placeholderTextColor="#FFFFFF"
-        style={styles.input}
+        style={[styles.input, phoneError && styles.inputError]}
         keyboardType="phone-pad"
-        maxLength={11}
+        maxLength={15}
         value={phone}
-        onChangeText={setPhone}
+        onChangeText={handlePhoneChange}
+        autoComplete="tel"
+        textContentType="telephoneNumber"
       />
+      {phoneError ? (
+        <Text style={styles.errorText}>{phoneError}</Text>
+      ) : null}
 
       <TouchableOpacity 
         style={[styles.button, loading && styles.buttonDisabled]} 
@@ -147,5 +190,16 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  inputError: {
+    borderColor: '#FF6B6B',
+    borderWidth: 2,
+  },
+  errorText: {
+    color: '#FF6B6B',
+    fontSize: 12,
+    marginTop: 5,
+    marginBottom: 10,
+    fontFamily: 'Poppins-Regular',
   },
 });
