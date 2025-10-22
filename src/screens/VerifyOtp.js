@@ -11,9 +11,20 @@ const VerifyOtp = ({ navigation, route }) => {
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
   const [verified, setVerified] = useState(false);
+  const [isNewUser, setIsNewUser] = useState(false);
   const [fadeAnim] = useState(new Animated.Value(0));
   const phone = route?.params?.phone;
   const inputRef = useRef(null);
+
+  const handleStartOnboarding = async () => {
+    try {
+      await AsyncStorage.setItem('isOnboardingComplete', 'false');
+      navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] });
+    } catch (error) {
+      console.error('Error setting onboarding state:', error);
+      Alert.alert('Error', 'Failed to start onboarding. Please try again.');
+    }
+  };
 
   const handleContinue = async () => {
     if (otp.length !== 4) {
@@ -40,6 +51,13 @@ const VerifyOtp = ({ navigation, route }) => {
       setVerified(true);
       setLoading(false);
       
+      // Check if user is new or existing
+      if (verifyResult.redirectTo === 'onboarding') {
+        setIsNewUser(true);
+      } else if (verifyResult.redirectTo === 'dashboard') {
+        setIsNewUser(false);
+      }
+      
       // Animate the verified label
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -62,10 +80,8 @@ const VerifyOtp = ({ navigation, route }) => {
             navigation.reset({ index: 0, routes: [{ name: 'Dashboard' }] });
           });
         } else if (verifyResult.redirectTo === 'onboarding') {
-          // New user or existing user without completed onboarding - go to Onboarding
-          AsyncStorage.setItem('isOnboardingComplete', 'false').then(() => {
-            navigation.reset({ index: 0, routes: [{ name: 'Onboarding' }] });
-          });
+          // New user or existing user without completed onboarding - show new user screen
+          // Don't auto-navigate, let user click button
         }
       }, 800);
     } catch (error) {
@@ -131,7 +147,20 @@ const VerifyOtp = ({ navigation, route }) => {
             <Ionicons name="checkmark-circle" size={80} color="#4CAF50" />
           </View>
           <Text style={styles.verifiedText}>Verified!</Text>
-          <Text style={styles.verifiedSubText}>Redirecting...</Text>
+          
+          {isNewUser ? (
+            <>
+              <Text style={styles.verifiedSubText}>Welcome! Let's set up your account</Text>
+              <TouchableOpacity 
+                style={styles.startOnboardingButton}
+                onPress={handleStartOnboarding}
+              >
+                <Text style={styles.startOnboardingButtonText}>Create your company account</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <Text style={styles.verifiedSubText}>Redirecting to Dashboard...</Text>
+          )}
         </Animated.View>
       )}
     </View>
@@ -234,5 +263,19 @@ const styles = StyleSheet.create({
     color: '#FFFFFF',
     textAlign: 'center',
     opacity: 0.8,
+    marginBottom: 20,
+  },
+  startOnboardingButton: {
+    backgroundColor: '#4CAF50',
+    paddingVertical: 15,
+    paddingHorizontal: 30,
+    borderRadius: 10,
+    marginTop: 20,
+  },
+  startOnboardingButtonText: {
+    color: '#FFFFFF',
+    fontSize: 16,
+    fontWeight: 'bold',
+    textAlign: 'center',
   },
 });
