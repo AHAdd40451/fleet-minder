@@ -287,7 +287,55 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
   return (
     <View style={styles.container}>
       <Text style={styles.title}>Assets Information</Text>
+      <View style={styles.imageSection}>
+        <Text style={styles.sectionTitle}>VIN Images</Text>
+        <TouchableOpacity
+          style={styles.addImageButton}
+          onPress={() => pickImages(setVinImages, "vin")}
+        >
+          <Text style={styles.addImageText}>+ Add VIN Images</Text>
+        </TouchableOpacity>
+        {vinImages.length > 0 && (
+          <View style={styles.imageGrid}>
+            {vinImages.map((imageUri, index) => (
+              <View key={index} style={styles.imageContainer}>
+                <Image source={{ uri: imageUri }} style={styles.thumbnail} />
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={() => removeImage(imageUri, setVinImages)}
+                >
+                  <Text style={styles.removeButtonText}>×</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
 
+      <View style={styles.imageSection}>
+        <Text style={styles.sectionTitle}>Odometer Images</Text>
+        <TouchableOpacity
+          style={styles.addImageButton}
+          onPress={() => pickImages(setMeterImages, "meter")}
+        >
+          <Text style={styles.addImageText}>+ Add Odometer Images</Text>
+        </TouchableOpacity>
+        {meterImages.length > 0 && (
+          <View style={styles.imageGrid}>
+            {meterImages.map((imageUri, index) => (
+              <View key={index} style={styles.imageContainer}>
+                <Image source={{ uri: imageUri }} style={styles.thumbnail} />
+                <TouchableOpacity
+                  style={styles.removeButton}
+                  onPress={() => removeImage(imageUri, setMeterImages)}
+                >
+                  <Text style={styles.removeButtonText}>×</Text>
+                </TouchableOpacity>
+              </View>
+            ))}
+          </View>
+        )}
+      </View>
       <View>
         <TextInput
           style={[styles.input, errors.vin && styles.inputError]}
@@ -387,55 +435,7 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
         {errors.odometer && <Text style={styles.errorText}>{errors.odometer}</Text>}
       </View>
 
-      <View style={styles.imageSection}>
-        <Text style={styles.sectionTitle}>VIN Images</Text>
-        <TouchableOpacity
-          style={styles.addImageButton}
-          onPress={() => pickImages(setVinImages, "vin")}
-        >
-          <Text style={styles.addImageText}>+ Add VIN Images</Text>
-        </TouchableOpacity>
-        {vinImages.length > 0 && (
-          <View style={styles.imageGrid}>
-            {vinImages.map((imageUri, index) => (
-              <View key={index} style={styles.imageContainer}>
-                <Image source={{ uri: imageUri }} style={styles.thumbnail} />
-                <TouchableOpacity
-                  style={styles.removeButton}
-                  onPress={() => removeImage(imageUri, setVinImages)}
-                >
-                  <Text style={styles.removeButtonText}>×</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
-
-      <View style={styles.imageSection}>
-        <Text style={styles.sectionTitle}>Odometer Images</Text>
-        <TouchableOpacity
-          style={styles.addImageButton}
-          onPress={() => pickImages(setMeterImages, "meter")}
-        >
-          <Text style={styles.addImageText}>+ Add Odometer Images</Text>
-        </TouchableOpacity>
-        {meterImages.length > 0 && (
-          <View style={styles.imageGrid}>
-            {meterImages.map((imageUri, index) => (
-              <View key={index} style={styles.imageContainer}>
-                <Image source={{ uri: imageUri }} style={styles.thumbnail} />
-                <TouchableOpacity
-                  style={styles.removeButton}
-                  onPress={() => removeImage(imageUri, setMeterImages)}
-                >
-                  <Text style={styles.removeButtonText}>×</Text>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </View>
-        )}
-      </View>
+     
 
       {loading && <ActivityIndicator color="#fff" style={{ marginTop: 10 }} />}
 
