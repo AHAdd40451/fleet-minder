@@ -47,7 +47,8 @@ const DashboardScreen = ({ navigation }) => {
     year: '',
     mileage: '',
     odometer: '',
-    color: ''
+    color: '',
+    asset_name: ''
   });
   const [vehicleFormErrors, setVehicleFormErrors] = useState({});
   const [vehicleFormLoading, setVehicleFormLoading] = useState(false);
@@ -275,10 +276,13 @@ const DashboardScreen = ({ navigation }) => {
   const openAddVehicleModal = () => {
     setVehicleFormData({
       vin: '',
-    
+      make: '',
+      model: '',
+      year: '',
       mileage: '',
       odometer: '',
-      color: ''
+      color: '',
+      asset_name: ''
     });
     setVehicleFormErrors({});
     setVinImages([]);
@@ -290,10 +294,13 @@ const DashboardScreen = ({ navigation }) => {
     setAddVehicleModalVisible(false);
     setVehicleFormData({
       vin: '',
- 
+      make: '',
+      model: '',
+      year: '',
       mileage: '',
       odometer: '',
-      color: ''
+      color: '',
+      asset_name: ''
     });
     setVehicleFormErrors({});
     setVinImages([]);
@@ -309,7 +316,8 @@ const DashboardScreen = ({ navigation }) => {
       year: vehicle.year ? vehicle.year.toString() : '',
       mileage: vehicle.mileage ? vehicle.mileage.toString() : '',
       odometer: vehicle.odometer ? vehicle.odometer.toString() : '',
-      color: vehicle.color || ''
+      color: vehicle.color || '',
+      asset_name: vehicle.asset_name || ''
     });
     setVehicleFormErrors({});
     setVinImages([]);
@@ -327,7 +335,8 @@ const DashboardScreen = ({ navigation }) => {
       year: '',
       mileage: '',
       odometer: '',
-      color: ''
+      color: '',
+      asset_name: ''
     });
     setVehicleFormErrors({});
     setVinImages([]);
@@ -513,6 +522,7 @@ const DashboardScreen = ({ navigation }) => {
         color: vehicleFormData.color || null,
         mileage: vehicleFormData.mileage ? Number(vehicleFormData.mileage) : null,
         odometer: vehicleFormData.odometer ? Number(vehicleFormData.odometer) : null,
+        asset_name: vehicleFormData.asset_name || null,
         image_url: null, // You can add image upload functionality later
       };
       
@@ -553,6 +563,7 @@ const DashboardScreen = ({ navigation }) => {
         color: vehicleFormData.color || null,
         mileage: vehicleFormData.mileage ? Number(vehicleFormData.mileage) : null,
         odometer: vehicleFormData.odometer ? Number(vehicleFormData.odometer) : null,
+        asset_name: vehicleFormData.asset_name || null,
         image_url: editingVehicle.image_url, // Keep existing image_url
       };
       
@@ -713,7 +724,7 @@ const DashboardScreen = ({ navigation }) => {
                 <View style={styles.vehicleHeader}>
                   <View style={styles.vehicleTitleContainer}>
                     <Text style={styles.vehicleTitle}>
-                      {vehicle.make && vehicle.model ? `${vehicle.make} ${vehicle.model}` : 'Assets'}
+                      {vehicle.asset_name || (vehicle.make && vehicle.model ? `${vehicle.make} ${vehicle.model}` : 'Asset')}
                       {vehicle.year && ` (${vehicle.year})`}
                     </Text>
                     <Text style={styles.vehicleVin}>{vehicle.vin || 'No VIN'}</Text>
@@ -726,6 +737,12 @@ const DashboardScreen = ({ navigation }) => {
                   />
                 </View>
                 <View style={styles.vehicleDetails}>
+                  {vehicle.asset_name && (
+                    <View style={styles.vehicleDetailRow}>
+                      <Text style={styles.vehicleDetailLabel}>Asset Name:</Text>
+                      <Text style={styles.vehicleDetailValue}>{vehicle.asset_name}</Text>
+                    </View>
+                  )}
                   {vehicle.vin && (
                     <View style={styles.vehicleDetailRow}>
                       <Text style={styles.vehicleDetailLabel}>VIN:</Text>
@@ -869,6 +886,75 @@ const DashboardScreen = ({ navigation }) => {
             
             <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
               <View style={styles.inputContainer}>
+                      {/* VIN Images Section */}
+              <View style={styles.imageSection}>
+                <Text style={styles.sectionTitle}>VIN Images (Optional)</Text>
+                <TouchableOpacity
+                  style={styles.addImageButton}
+                  onPress={() => pickImages(setVinImages, "vin")}
+                >
+                  <Text style={styles.addImageText}>+ Add VIN Images</Text>
+                </TouchableOpacity>
+                {vinImages.length > 0 && (
+                  <View style={styles.imageGrid}>
+                    {vinImages.map((imageUri, index) => (
+                      <View key={index} style={styles.imageContainer}>
+                        <Image source={{ uri: imageUri }} style={styles.thumbnail} />
+                        <TouchableOpacity
+                          style={styles.removeButton}
+                          onPress={() => removeImage(imageUri, setVinImages)}
+                        >
+                          <Text style={styles.removeButtonText}>×</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              {/* Odometer Images Section */}
+              <View style={styles.imageSection}>
+                <Text style={styles.sectionTitle}>Odometer Images (Optional)</Text>
+                <TouchableOpacity
+                  style={styles.addImageButton}
+                  onPress={() => pickImages(setMeterImages, "meter")}
+                >
+                  <Text style={styles.addImageText}>+ Add Odometer Images</Text>
+                </TouchableOpacity>
+                {meterImages.length > 0 && (
+                  <View style={styles.imageGrid}>
+                    {meterImages.map((imageUri, index) => (
+                      <View key={index} style={styles.imageContainer}>
+                        <Image source={{ uri: imageUri }} style={styles.thumbnail} />
+                        <TouchableOpacity
+                          style={styles.removeButton}
+                          onPress={() => removeImage(imageUri, setMeterImages)}
+                        >
+                          <Text style={styles.removeButtonText}>×</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              {vehicleFormLoading && (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator color="#00E676" size="small" />
+                  <Text style={styles.loadingText}>Processing image...</Text>
+                </View>
+              )}
+                <Text style={styles.inputLabel}>Asset Name (Optional)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={vehicleFormData.asset_name}
+                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, asset_name: text }))}
+                  placeholder="Enter asset name"
+                  placeholderTextColor="#666"
+                />
+              </View>
+              
+              <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>VIN (Optional)</Text>
                 <TextInput
                   style={[styles.modalInput, vehicleFormErrors.vin && styles.inputError]}
@@ -994,64 +1080,7 @@ const DashboardScreen = ({ navigation }) => {
                 />
               </View>
 
-              {/* VIN Images Section */}
-              <View style={styles.imageSection}>
-                <Text style={styles.sectionTitle}>VIN Images (Optional)</Text>
-                <TouchableOpacity
-                  style={styles.addImageButton}
-                  onPress={() => pickImages(setVinImages, "vin")}
-                >
-                  <Text style={styles.addImageText}>+ Add VIN Images</Text>
-                </TouchableOpacity>
-                {vinImages.length > 0 && (
-                  <View style={styles.imageGrid}>
-                    {vinImages.map((imageUri, index) => (
-                      <View key={index} style={styles.imageContainer}>
-                        <Image source={{ uri: imageUri }} style={styles.thumbnail} />
-                        <TouchableOpacity
-                          style={styles.removeButton}
-                          onPress={() => removeImage(imageUri, setVinImages)}
-                        >
-                          <Text style={styles.removeButtonText}>×</Text>
-                        </TouchableOpacity>
-                      </View>
-                    ))}
-                  </View>
-                )}
-              </View>
-
-              {/* Odometer Images Section */}
-              <View style={styles.imageSection}>
-                <Text style={styles.sectionTitle}>Odometer Images (Optional)</Text>
-                <TouchableOpacity
-                  style={styles.addImageButton}
-                  onPress={() => pickImages(setMeterImages, "meter")}
-                >
-                  <Text style={styles.addImageText}>+ Add Odometer Images</Text>
-                </TouchableOpacity>
-                {meterImages.length > 0 && (
-                  <View style={styles.imageGrid}>
-                    {meterImages.map((imageUri, index) => (
-                      <View key={index} style={styles.imageContainer}>
-                        <Image source={{ uri: imageUri }} style={styles.thumbnail} />
-                        <TouchableOpacity
-                          style={styles.removeButton}
-                          onPress={() => removeImage(imageUri, setMeterImages)}
-                        >
-                          <Text style={styles.removeButtonText}>×</Text>
-                        </TouchableOpacity>
-                      </View>
-                    ))}
-                  </View>
-                )}
-              </View>
-
-              {vehicleFormLoading && (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator color="#00E676" size="small" />
-                  <Text style={styles.loadingText}>Processing image...</Text>
-                </View>
-              )}
+        
             </ScrollView>
             
             <View style={styles.modalActions}>
@@ -1093,6 +1122,17 @@ const DashboardScreen = ({ navigation }) => {
             </View>
             
             <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
+              <View style={styles.inputContainer}>
+                <Text style={styles.inputLabel}>Asset Name (Optional)</Text>
+                <TextInput
+                  style={styles.modalInput}
+                  value={vehicleFormData.asset_name}
+                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, asset_name: text }))}
+                  placeholder="Enter asset name"
+                  placeholderTextColor="#666"
+                />
+              </View>
+              
               <View style={styles.inputContainer}>
                              {/* VIN Images Section */}
               <View style={styles.imageSection}>
