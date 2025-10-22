@@ -15,6 +15,7 @@ import {
   Platform
 } from 'react-native';
 import Button from '../components/Button';
+import { FleetLoadingAnimation } from '../components';
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import Tesseract from "tesseract.js";
@@ -626,12 +627,7 @@ const DashboardScreen = ({ navigation }) => {
   };
 
   if (loading) {
-    return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator color="#fff" size="large" />
-        <Text style={styles.loadingText}>Loading dashboard...</Text>
-      </View>
-    );
+    return <FleetLoadingAnimation text="Warming up your fleet..." />;
   }
 
   return (
@@ -1419,18 +1415,6 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0a0a0a',
-  },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: '#0a0a0a',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    color: '#fff',
-    marginTop: 10,
-    fontSize: 16,
-    fontWeight: '500',
   },
   header: {
     flexDirection: 'row',
