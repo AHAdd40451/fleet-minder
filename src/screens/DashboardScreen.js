@@ -1094,6 +1094,64 @@ const DashboardScreen = ({ navigation }) => {
             
             <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
               <View style={styles.inputContainer}>
+                             {/* VIN Images Section */}
+              <View style={styles.imageSection}>
+                <Text style={styles.sectionTitle}>VIN Images (Optional)</Text>
+                <TouchableOpacity
+                  style={styles.addImageButton}
+                  onPress={() => pickImages(setVinImages, "vin")}
+                >
+                  <Text style={styles.addImageText}>+ Add VIN Images</Text>
+                </TouchableOpacity>
+                {vinImages.length > 0 && (
+                  <View style={styles.imageGrid}>
+                    {vinImages.map((imageUri, index) => (
+                      <View key={index} style={styles.imageContainer}>
+                        <Image source={{ uri: imageUri }} style={styles.thumbnail} />
+                        <TouchableOpacity
+                          style={styles.removeButton}
+                          onPress={() => removeImage(imageUri, setVinImages)}
+                        >
+                          <Text style={styles.removeButtonText}>×</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              {/* Odometer Images Section */}
+              <View style={styles.imageSection}>
+                <Text style={styles.sectionTitle}>Odometer Images (Optional)</Text>
+                <TouchableOpacity
+                  style={styles.addImageButton}
+                  onPress={() => pickImages(setMeterImages, "meter")}
+                >
+                  <Text style={styles.addImageText}>+ Add Odometer Images</Text>
+                </TouchableOpacity>
+                {meterImages.length > 0 && (
+                  <View style={styles.imageGrid}>
+                    {meterImages.map((imageUri, index) => (
+                      <View key={index} style={styles.imageContainer}>
+                        <Image source={{ uri: imageUri }} style={styles.thumbnail} />
+                        <TouchableOpacity
+                          style={styles.removeButton}
+                          onPress={() => removeImage(imageUri, setMeterImages)}
+                        >
+                          <Text style={styles.removeButtonText}>×</Text>
+                        </TouchableOpacity>
+                      </View>
+                    ))}
+                  </View>
+                )}
+              </View>
+
+              {vehicleFormLoading && (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator color="#00E676" size="small" />
+                  <Text style={styles.loadingText}>Processing image...</Text>
+                </View>
+              )}
                 <Text style={styles.inputLabel}>VIN (Optional)</Text>
                 <TextInput
                   style={[styles.modalInput, vehicleFormErrors.vin && styles.inputError]}
@@ -1219,64 +1277,7 @@ const DashboardScreen = ({ navigation }) => {
                 />
               </View>
 
-              {/* VIN Images Section */}
-              <View style={styles.imageSection}>
-                <Text style={styles.sectionTitle}>VIN Images (Optional)</Text>
-                <TouchableOpacity
-                  style={styles.addImageButton}
-                  onPress={() => pickImages(setVinImages, "vin")}
-                >
-                  <Text style={styles.addImageText}>+ Add VIN Images</Text>
-                </TouchableOpacity>
-                {vinImages.length > 0 && (
-                  <View style={styles.imageGrid}>
-                    {vinImages.map((imageUri, index) => (
-                      <View key={index} style={styles.imageContainer}>
-                        <Image source={{ uri: imageUri }} style={styles.thumbnail} />
-                        <TouchableOpacity
-                          style={styles.removeButton}
-                          onPress={() => removeImage(imageUri, setVinImages)}
-                        >
-                          <Text style={styles.removeButtonText}>×</Text>
-                        </TouchableOpacity>
-                      </View>
-                    ))}
-                  </View>
-                )}
-              </View>
-
-              {/* Odometer Images Section */}
-              <View style={styles.imageSection}>
-                <Text style={styles.sectionTitle}>Odometer Images (Optional)</Text>
-                <TouchableOpacity
-                  style={styles.addImageButton}
-                  onPress={() => pickImages(setMeterImages, "meter")}
-                >
-                  <Text style={styles.addImageText}>+ Add Odometer Images</Text>
-                </TouchableOpacity>
-                {meterImages.length > 0 && (
-                  <View style={styles.imageGrid}>
-                    {meterImages.map((imageUri, index) => (
-                      <View key={index} style={styles.imageContainer}>
-                        <Image source={{ uri: imageUri }} style={styles.thumbnail} />
-                        <TouchableOpacity
-                          style={styles.removeButton}
-                          onPress={() => removeImage(imageUri, setMeterImages)}
-                        >
-                          <Text style={styles.removeButtonText}>×</Text>
-                        </TouchableOpacity>
-                      </View>
-                    ))}
-                  </View>
-                )}
-              </View>
-
-              {vehicleFormLoading && (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator color="#00E676" size="small" />
-                  <Text style={styles.loadingText}>Processing image...</Text>
-                </View>
-              )}
+ 
             </ScrollView>
             
             <View style={styles.modalActions}>
