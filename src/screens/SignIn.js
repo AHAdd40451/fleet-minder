@@ -11,28 +11,51 @@ const SignIn = () => {
   const [loading, setLoading] = useState(false);
   const [phoneError, setPhoneError] = useState('');
 
-  // Format phone number to only allow numeric characters
+  // Format phone number to USA format (XXX) XXX-XXXX
   const formatPhoneNumber = (text) => {
     // Remove all non-numeric characters
     const numericOnly = text.replace(/[^0-9]/g, '');
-    return numericOnly;
+    
+    // Limit to 10 digits for USA format
+    const limited = numericOnly.slice(0, 10);
+    
+    // Format as (XXX) XXX-XXXX
+    if (limited.length === 0) return '';
+    if (limited.length <= 3) return `(${limited}`;
+    if (limited.length <= 6) return `(${limited.slice(0, 3)}) ${limited.slice(3)}`;
+    return `(${limited.slice(0, 3)}) ${limited.slice(3, 6)}-${limited.slice(6)}`;
   };
 
-  // Validate phone number format
+  // Validate USA phone number format
   const validatePhoneNumber = (phoneNumber) => {
-    if (!phoneNumber || phoneNumber.length === 0) {
+    // Remove formatting to get just digits
+    const digitsOnly = phoneNumber.replace(/[^0-9]/g, '');
+    
+    if (!digitsOnly || digitsOnly.length === 0) {
       return 'Phone number is required';
     }
-    if (phoneNumber.length < 10) {
-      return 'Phone number must be at least 10 digits';
+    
+    if (digitsOnly.length !== 10) {
+      return 'Please enter a valid 10-digit US phone number';
     }
-    if (phoneNumber.length > 15) {
-      return 'Phone number cannot exceed 15 digits';
+    
+    // Check for valid area code (first digit cannot be 0 or 1)
+    const areaCode = digitsOnly.slice(0, 3);
+    if (areaCode[0] === '0' || areaCode[0] === '1') {
+      return 'Invalid area code. Area code cannot start with 0 or 1';
     }
-    // Check if it contains only numbers
-    if (!/^[0-9]+$/.test(phoneNumber)) {
-      return 'Phone number can only contain numbers';
+    
+    // Check for valid exchange code (fourth digit cannot be 0 or 1)
+    const exchangeCode = digitsOnly.slice(3, 6);
+    if (exchangeCode[0] === '0' || exchangeCode[0] === '1') {
+      return 'Invalid exchange code. Exchange code cannot start with 0 or 1';
     }
+    
+    // Check for common invalid patterns
+    if (areaCode === exchangeCode && areaCode === digitsOnly.slice(6)) {
+      return 'Phone number cannot have all identical digits';
+    }
+    
     return null;
   };
 
@@ -56,9 +79,11 @@ const SignIn = () => {
 
     setLoading(true);
     try {
-      const result = await requestOtp(phone);
+      // Send only digits to the OTP service
+      const digitsOnly = phone.replace(/[^0-9]/g, '');
+      const result = await requestOtp(digitsOnly);
       if (result.ok) {
-        navigation.navigate('VerifyOtp', { phone });
+        navigation.navigate('VerifyOtp', { phone: digitsOnly });
       } else {
         Alert.alert('Error', result.error || 'Failed to send OTP');
       }
@@ -81,11 +106,11 @@ const SignIn = () => {
       </Text>
 
       <TextInput
-        placeholder="Phone Number"
+        placeholder="(555) 123-4567"
         placeholderTextColor="#FFFFFF"
         style={[styles.input, phoneError && styles.inputError]}
         keyboardType="phone-pad"
-        maxLength={15}
+        maxLength={14}
         value={phone}
         onChangeText={handlePhoneChange}
         autoComplete="tel"
