@@ -288,7 +288,8 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Assets Information</Text>
+      <Text style={styles.title}>Welcome! Your first 
+      asset has been added.</Text>
       <View style={styles.imageSection}>
         <Text style={styles.sectionTitle}>VIN Images</Text>
         <TouchableOpacity
@@ -507,7 +508,7 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
 
 const styles = StyleSheet.create({
   container: { padding: 20, marginBottom: 20 },
-  title: { color: "#fff", fontSize: 22, marginBottom: 20 },
+  title: { color: "#fff", fontSize: 22, marginBottom: 20, textAlign: 'center' },
   input: {
     borderWidth: 1,
     borderColor: '#FFFFFF',
