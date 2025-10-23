@@ -15,7 +15,7 @@ import {
   Platform
 } from 'react-native';
 import Button from '../components/Button';
-import { FleetLoadingAnimation } from '../components';
+import { FleetLoadingAnimation, NotifyMessage, SweetBox } from '../components';
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import Tesseract from "tesseract.js";
@@ -55,7 +55,10 @@ const DashboardScreen = ({ navigation }) => {
   const [vehicleFormLoading, setVehicleFormLoading] = useState(false);
   const [vehicleFormSaving, setVehicleFormSaving] = useState(false);
   const [vinImages, setVinImages] = useState([]);
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [meterImages, setMeterImages] = useState([]);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [showAddAlert, setShowAddAlert] = useState(false);
 
   const fetchUserData = async () => {
     try {
@@ -344,6 +347,35 @@ const DashboardScreen = ({ navigation }) => {
     setMeterImages([]);
   };
 
+  const deleteVehicle = async (vehicleId) => {
+    try { 
+      setIsDeleting(true);
+
+      const { error } = await supabase
+        .from("vehicles") // your table name
+        .delete()
+        .eq("id", vehicleId);
+
+      if (error) {
+        console.error("Error deleting vehicle:", error.message);
+        Alert.alert("Error", "Failed to delete vehicle");
+        return;
+      }
+
+      // Update local state to remove the deleted vehicle from UI
+      setVehiclesData(prevVehicles => 
+        prevVehicles.filter(vehicle => vehicle.id !== vehicleId)
+      );
+      
+      setShowDeleteAlert(true);
+    } catch (err) {
+      console.error("Unexpected error:", err);
+      Alert.alert("Error", "Failed to delete vehicle. Please try again.");
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   const pickImages = async (setter, type) => {
     try {
       const result = await ImagePicker.launchImageLibraryAsync({
@@ -535,7 +567,7 @@ const DashboardScreen = ({ navigation }) => {
       
       // Close modal and show success
       closeAddVehicleModal();
-      Alert.alert("Success", "Vehicle added successfully!");
+      setShowAddAlert(true);
       
     } catch (e) {
       console.error("Error adding vehicle:", e);
@@ -733,6 +765,13 @@ const DashboardScreen = ({ navigation }) => {
                     variant="white"
                     style={{ minWidth: 80 , borderRadius: 8,}}
                   />
+ <Button
+      title={isDeleting ? "Deleting..." : "Delete"}
+      onPress={() => deleteVehicle(vehicle.id)}
+      disabled={isDeleting}
+      variant='red'
+    />
+
                 </View>
                 <View style={styles.vehicleDetails}>
                   {vehicle.asset_name && (
@@ -1409,6 +1448,26 @@ const DashboardScreen = ({ navigation }) => {
           </View>
         </View>
       </Modal>
+      
+      {/* SweetBox Alert for Delete Success */}
+      <SweetBox
+        visible={showDeleteAlert}
+        type="success"
+        title="Success!"
+        message="Vehicle deleted successfully"
+        onConfirm={() => setShowDeleteAlert(false)}
+        onClose={() => setShowDeleteAlert(false)}
+      />
+
+      {/* SweetBox Alert for Add Success */}
+      <SweetBox
+        visible={showAddAlert}
+        type="success"
+        title="Success!"
+        message="Asset added successfully"
+        onConfirm={() => setShowAddAlert(false)}
+        onClose={() => setShowAddAlert(false)}
+      />
     </ScrollView>
   );
 };

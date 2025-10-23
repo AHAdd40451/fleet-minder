@@ -293,14 +293,14 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   startOnboardingButton: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: 'white',
     paddingVertical: 15,
     paddingHorizontal: 30,
     borderRadius: 10,
     marginTop: 20,
   },
   startOnboardingButtonText: {
-    color: '#FFFFFF',
+    color: 'black',
     fontSize: 16,
     fontWeight: 'bold',
     textAlign: 'center',
