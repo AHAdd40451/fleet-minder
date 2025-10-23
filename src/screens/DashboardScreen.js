@@ -58,6 +58,7 @@ const DashboardScreen = ({ navigation }) => {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [meterImages, setMeterImages] = useState([]);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showAddAlert, setShowAddAlert] = useState(false);
 
   const fetchUserData = async () => {
     try {
@@ -566,7 +567,7 @@ const DashboardScreen = ({ navigation }) => {
       
       // Close modal and show success
       closeAddVehicleModal();
-      Alert.alert("Success", "Vehicle added successfully!");
+      setShowAddAlert(true);
       
     } catch (e) {
       console.error("Error adding vehicle:", e);
@@ -1456,6 +1457,16 @@ const DashboardScreen = ({ navigation }) => {
         message="Vehicle deleted successfully"
         onConfirm={() => setShowDeleteAlert(false)}
         onClose={() => setShowDeleteAlert(false)}
+      />
+
+      {/* SweetBox Alert for Add Success */}
+      <SweetBox
+        visible={showAddAlert}
+        type="success"
+        title="Success!"
+        message="Asset added successfully"
+        onConfirm={() => setShowAddAlert(false)}
+        onClose={() => setShowAddAlert(false)}
       />
     </ScrollView>
   );
