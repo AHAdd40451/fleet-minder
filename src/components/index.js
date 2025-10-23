@@ -3,3 +3,4 @@ export { default as GlassButton } from './GlassButton';
 export { default as GlassInput } from './GlassInput';
 export { default as FleetLoadingAnimation } from './FleetLoadingAnimation';
 export { default as NotifyMessage } from './NotifyMessage';
+export { default as SweetBox } from './SweetBox';

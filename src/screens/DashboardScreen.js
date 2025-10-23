@@ -15,7 +15,7 @@ import {
   Platform
 } from 'react-native';
 import Button from '../components/Button';
-import { FleetLoadingAnimation } from '../components';
+import { FleetLoadingAnimation, NotifyMessage, SweetBox } from '../components';
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system/legacy";
 import Tesseract from "tesseract.js";
@@ -55,6 +55,7 @@ const DashboardScreen = ({ navigation }) => {
   const [vehicleFormLoading, setVehicleFormLoading] = useState(false);
   const [vehicleFormSaving, setVehicleFormSaving] = useState(false);
   const [vinImages, setVinImages] = useState([]);
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [meterImages, setMeterImages] = useState([]);
   const [isDeleting, setIsDeleting] = useState(false);
 
@@ -346,7 +347,7 @@ const DashboardScreen = ({ navigation }) => {
   };
 
   const deleteVehicle = async (vehicleId) => {
-    try {
+    try { 
       setIsDeleting(true);
 
       const { error } = await supabase
@@ -360,7 +361,8 @@ const DashboardScreen = ({ navigation }) => {
         return;
       }
 
-      alert("Vehicle deleted successfully");
+      // alert("Vehicle deleted successfully");
+      setShowDeleteAlert(true);
       onDeleted?.(vehicleId); // refresh parent list if needed
     } catch (err) {
       console.error("Unexpected error:", err);
@@ -761,7 +763,6 @@ const DashboardScreen = ({ navigation }) => {
  <Button
       title={isDeleting ? "Deleting..." : "Delete"}
       onPress={() => deleteVehicle(vehicle.id)}
-      color={isDeleting ? "gray" : "red"} // optional visual feedback
       disabled={isDeleting}
       variant='red'
     />
@@ -1442,6 +1443,16 @@ const DashboardScreen = ({ navigation }) => {
           </View>
         </View>
       </Modal>
+      
+      {/* SweetBox Alert for Delete Success */}
+      <SweetBox
+        visible={showDeleteAlert}
+        type="success"
+        title="Success!"
+        message="Vehicle deleted successfully"
+        onConfirm={() => setShowDeleteAlert(false)}
+        onClose={() => setShowDeleteAlert(false)}
+      />
     </ScrollView>
   );
 };
