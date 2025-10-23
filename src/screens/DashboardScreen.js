@@ -656,7 +656,7 @@ const DashboardScreen = ({ navigation }) => {
               title="Edit" 
               onPress={openEditCompanyModal}
               variant="white"
-              style={{ minWidth: 120 }}
+              style={{ minWidth: 80 , borderRadius: 8,}}
             />
           )}
         </View>
@@ -731,7 +731,7 @@ const DashboardScreen = ({ navigation }) => {
                     title="Edit" 
                     onPress={() => openEditVehicleModal(vehicle)}
                     variant="white"
-                    style={{ minWidth: 130 }}
+                    style={{ minWidth: 80 , borderRadius: 8,}}
                   />
                 </View>
                 <View style={styles.vehicleDetails}>
@@ -942,7 +942,7 @@ const DashboardScreen = ({ navigation }) => {
                   <Text style={styles.loadingText}>Processing image...</Text>
                 </View>
               )}
-                <Text style={styles.inputLabel}>Asset Name*</Text>
+                <Text style={styles.inputLabel}>Asset Name</Text>
                 <TextInput
                   style={styles.modalInput}
                   value={vehicleFormData.asset_name}

@@ -20,6 +20,8 @@ import Button from "../../components/Button"
 
 const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigation }) => {
   const [vin, setVin] = useState(data.vin || "");
+  const [assetName, setAssetName] = useState('');
+  const [color, setColor] = useState('');
   const [make, setMake] = useState(data.make || "");
   const [model, setModel] = useState(data.model || "");
   const [year, setYear] = useState(data.year || "");
@@ -336,6 +338,43 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
           </View>
         )}
       </View>
+      
+      <Text style={styles.inputLabel}>Asset Name*</Text>
+      <View>
+        <TextInput
+          style={[styles.input, errors.assetName && styles.inputError]}
+          placeholder="Enter asset name"
+          placeholderTextColor="#777"
+          value={assetName}
+          onChangeText={(text) => {
+            setAssetName(text);
+            if (errors.assetName) {
+              setErrors(prev => ({ ...prev, assetName: null }));
+            }
+          }}
+        />
+        {errors.assetName && <Text style={styles.errorText}>{errors.assetName}</Text>}
+      </View>
+
+      <Text style={styles.inputLabel}>Asset Color*</Text>
+      <View>
+        <TextInput
+          style={[styles.input, errors.color && styles.inputError]}
+          placeholder="Enter color name"
+          placeholderTextColor="#777"
+          value={color}
+          onChangeText={(text) => {
+            setColor(text);
+            if (errors.color) {
+              setErrors(prev => ({ ...prev, color: null }));
+            }
+          }}
+        />
+        {errors.color && <Text style={styles.errorText}>{errors.color}</Text>}
+      </View>
+
+
+     <Text style={styles.inputLabel}>Vin</Text>
       <View>
         <TextInput
           style={[styles.input, errors.vin && styles.inputError]}
@@ -352,6 +391,7 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
         {errors.vin && <Text style={styles.errorText}>{errors.vin}</Text>}
       </View>
 
+      <Text style={styles.inputLabel}>Make*</Text>
       <View>
         <TextInput
           style={[styles.input, errors.make && styles.inputError]}
@@ -368,6 +408,8 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
         {errors.make && <Text style={styles.errorText}>{errors.make}</Text>}
       </View>
 
+
+      <Text style={styles.inputLabel}>Modal*</Text>
       <View>
         <TextInput
           style={[styles.input, errors.model && styles.inputError]}
@@ -383,7 +425,8 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
         />
         {errors.model && <Text style={styles.errorText}>{errors.model}</Text>}
       </View>
-
+      
+      <Text style={styles.inputLabel}>Year*</Text>
       <View>
         <TextInput
           style={[styles.input, errors.year && styles.inputError]}
@@ -400,7 +443,8 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
         />
         {errors.year && <Text style={styles.errorText}>{errors.year}</Text>}
       </View>
-
+     
+      <Text style={styles.inputLabel}>Mileage</Text>
       <View>
         <TextInput
           style={[styles.input, errors.mileage && styles.inputError]}
@@ -417,7 +461,8 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
         />
         {errors.mileage && <Text style={styles.errorText}>{errors.mileage}</Text>}
       </View>
-
+     
+      <Text style={styles.inputLabel}>Odometer</Text>
       <View>
         <TextInput
           style={[styles.input, errors.odometer && styles.inputError]}
@@ -476,6 +521,12 @@ const styles = StyleSheet.create({
   inputError: {
     borderColor: "#ff4444",
     borderWidth: 1,
+  },
+  inputLabel: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
   },
   errorText: {
     color: "#ff4444",
