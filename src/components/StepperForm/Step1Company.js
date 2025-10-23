@@ -258,11 +258,12 @@
 
 // export default Step1Company;
 import React, { useEffect, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, Alert } from "react-native";
+import { View, Text, TextInput, TouchableOpacity, StyleSheet } from "react-native";
 import { validateRequired } from "../../utils/validation";
 import { Picker } from "@react-native-picker/picker";
 import axios from 'axios';
 import Button from "../../components/Button";
+import SweetBox from "../SweetBox";
 
 const Step1Company = ({ data, setData, nextStep }) => {
   const [companyName, setCompanyName] = useState(data.name || "");
@@ -272,6 +273,7 @@ const Step1Company = ({ data, setData, nextStep }) => {
   const [states, setStates] = useState([]); 
   const [cities, setCities] = useState([]); // ✅ Added cities state
   const [errors, setErrors] = useState({});
+  const [showSweetBox, setShowSweetBox] = useState(false);
 
   const fetchCountries = async () => {
     try {
@@ -364,6 +366,11 @@ const Step1Company = ({ data, setData, nextStep }) => {
   const handleNext = () => {
     if (!validateForm()) return;
     setData({ name: companyName, country, state });
+    setShowSweetBox(true);
+  };
+
+  const handleSweetBoxConfirm = () => {
+    setShowSweetBox(false);
     nextStep();
   };
 
@@ -457,6 +464,17 @@ const Step1Company = ({ data, setData, nextStep }) => {
       )}
 
       <Button title='Next' onPress={handleNext} variant="white" />
+
+      <SweetBox
+        visible={showSweetBox}
+        type="success"
+        title="Success!"
+        message="Your account has been created successfully!"
+        confirmText="Continue"
+        onConfirm={handleSweetBoxConfirm}
+        onClose={() => setShowSweetBox(false)}
+        autoClose={false}
+      />
     </View>
   );
 };
