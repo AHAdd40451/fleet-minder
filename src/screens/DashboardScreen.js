@@ -56,6 +56,7 @@ const DashboardScreen = ({ navigation }) => {
   const [vehicleFormSaving, setVehicleFormSaving] = useState(false);
   const [vinImages, setVinImages] = useState([]);
   const [meterImages, setMeterImages] = useState([]);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const fetchUserData = async () => {
     try {
@@ -342,6 +343,30 @@ const DashboardScreen = ({ navigation }) => {
     setVehicleFormErrors({});
     setVinImages([]);
     setMeterImages([]);
+  };
+
+  const deleteVehicle = async (vehicleId) => {
+    try {
+      setIsDeleting(true);
+
+      const { error } = await supabase
+        .from("vehicles") // your table name
+        .delete()
+        .eq("id", vehicleId);
+
+      if (error) {
+        console.error("Error deleting vehicle:", error.message);
+        alert("Failed to delete vehicle");
+        return;
+      }
+
+      alert("Vehicle deleted successfully");
+      onDeleted?.(vehicleId); // refresh parent list if needed
+    } catch (err) {
+      console.error("Unexpected error:", err);
+    } finally {
+      setIsDeleting(false);
+    }
   };
 
   const pickImages = async (setter, type) => {
@@ -733,6 +758,14 @@ const DashboardScreen = ({ navigation }) => {
                     variant="white"
                     style={{ minWidth: 130 }}
                   />
+ <Button
+      title={isDeleting ? "Deleting..." : "Delete"}
+      onPress={() => deleteVehicle(vehicle.id)}
+      color={isDeleting ? "gray" : "red"} // optional visual feedback
+      disabled={isDeleting}
+      variant='red'
+    />
+
                 </View>
                 <View style={styles.vehicleDetails}>
                   {vehicle.asset_name && (
