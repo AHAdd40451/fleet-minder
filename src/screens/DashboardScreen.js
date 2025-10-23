@@ -357,15 +357,19 @@ const DashboardScreen = ({ navigation }) => {
 
       if (error) {
         console.error("Error deleting vehicle:", error.message);
-        alert("Failed to delete vehicle");
+        Alert.alert("Error", "Failed to delete vehicle");
         return;
       }
 
-      // alert("Vehicle deleted successfully");
+      // Update local state to remove the deleted vehicle from UI
+      setVehiclesData(prevVehicles => 
+        prevVehicles.filter(vehicle => vehicle.id !== vehicleId)
+      );
+      
       setShowDeleteAlert(true);
-      onDeleted?.(vehicleId); // refresh parent list if needed
     } catch (err) {
       console.error("Unexpected error:", err);
+      Alert.alert("Error", "Failed to delete vehicle. Please try again.");
     } finally {
       setIsDeleting(false);
     }
