@@ -511,16 +511,36 @@ const DashboardScreen = ({ navigation }) => {
   const validateVehicleForm = () => {
     const newErrors = {};
     
-    // Only validate VIN (optional but if provided, must be valid)
+    // Validate required fields
+    if (!vehicleFormData.asset_name || !vehicleFormData.asset_name.trim()) {
+      newErrors.asset_name = 'Asset name is required';
+    }
+    
+    if (!vehicleFormData.year || !vehicleFormData.year.trim()) {
+      newErrors.year = 'Year is required';
+    } else {
+      const yearValidation = validateYear(vehicleFormData.year);
+      if (!yearValidation.isValid) {
+        newErrors.year = yearValidation.message;
+      }
+    }
+    
+    if (!vehicleFormData.odometer || !vehicleFormData.odometer.trim()) {
+      newErrors.odometer = 'Odometer reading is required';
+    } else {
+      const odometerValidation = validateNumeric(vehicleFormData.odometer);
+      if (!odometerValidation.isValid) {
+        newErrors.odometer = 'Odometer must be a valid number';
+      }
+    }
+    
+    // Validate VIN (optional but if provided, must be valid)
     if (vehicleFormData.vin && vehicleFormData.vin.trim()) {
       const vinValidation = validateVIN(vehicleFormData.vin);
       if (!vinValidation.isValid) {
         newErrors.vin = vinValidation.message;
       }
     }
-    
-    // No validation needed for other fields since they're reference only
-    // and not saved to the database
     
     setVehicleFormErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -983,12 +1003,18 @@ const DashboardScreen = ({ navigation }) => {
               )}
                 <Text style={styles.inputLabel}>Asset Name*</Text>
                 <TextInput
-                  style={styles.modalInput}
+                  style={[styles.modalInput, vehicleFormErrors.asset_name && styles.inputError]}
                   value={vehicleFormData.asset_name}
-                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, asset_name: text }))}
+                  onChangeText={(text) => {
+                    setVehicleFormData(prev => ({ ...prev, asset_name: text }));
+                    if (vehicleFormErrors.asset_name) {
+                      setVehicleFormErrors(prev => ({ ...prev, asset_name: null }));
+                    }
+                  }}
                   placeholder="Enter asset name"
                   placeholderTextColor="#666"
                 />
+                {vehicleFormErrors.asset_name && <Text style={styles.errorText}>{vehicleFormErrors.asset_name}</Text>}
               </View>
               
               <View style={styles.inputContainer}>
@@ -1046,13 +1072,19 @@ const DashboardScreen = ({ navigation }) => {
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Year* </Text>
                 <TextInput
-                  style={styles.modalInput}
+                  style={[styles.modalInput, vehicleFormErrors.year && styles.inputError]}
                   value={vehicleFormData.year}
-                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, year: text }))}
+                  onChangeText={(text) => {
+                    setVehicleFormData(prev => ({ ...prev, year: text }));
+                    if (vehicleFormErrors.year) {
+                      setVehicleFormErrors(prev => ({ ...prev, year: null }));
+                    }
+                  }}
                   placeholder="Enter asset year"
                   placeholderTextColor="#666"
                   keyboardType="numeric"
                 />
+                {vehicleFormErrors.year && <Text style={styles.errorText}>{vehicleFormErrors.year}</Text>}
                 <Text style={styles.helpText}>For reference only - not saved to database</Text>
               </View>
               
@@ -1108,13 +1140,19 @@ const DashboardScreen = ({ navigation }) => {
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Odometer* </Text>
                 <TextInput
-                  style={styles.modalInput}
+                  style={[styles.modalInput, vehicleFormErrors.odometer && styles.inputError]}
                   value={vehicleFormData.odometer}
-                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, odometer: text }))}
+                  onChangeText={(text) => {
+                    setVehicleFormData(prev => ({ ...prev, odometer: text }));
+                    if (vehicleFormErrors.odometer) {
+                      setVehicleFormErrors(prev => ({ ...prev, odometer: null }));
+                    }
+                  }}
                   placeholder="Enter odometer reading"
                   placeholderTextColor="#666"
                   keyboardType="numeric"
                 />
+                {vehicleFormErrors.odometer && <Text style={styles.errorText}>{vehicleFormErrors.odometer}</Text>}
               </View>
 
         
@@ -1162,12 +1200,18 @@ const DashboardScreen = ({ navigation }) => {
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Asset Name*</Text>
                 <TextInput
-                  style={styles.modalInput}
+                  style={[styles.modalInput, vehicleFormErrors.asset_name && styles.inputError]}
                   value={vehicleFormData.asset_name}
-                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, asset_name: text }))}
+                  onChangeText={(text) => {
+                    setVehicleFormData(prev => ({ ...prev, asset_name: text }));
+                    if (vehicleFormErrors.asset_name) {
+                      setVehicleFormErrors(prev => ({ ...prev, asset_name: null }));
+                    }
+                  }}
                   placeholder="Enter asset name"
                   placeholderTextColor="#666"
                 />
+                {vehicleFormErrors.asset_name && <Text style={styles.errorText}>{vehicleFormErrors.asset_name}</Text>}
               </View>
               
               <View style={styles.inputContainer}>
@@ -1283,13 +1327,19 @@ const DashboardScreen = ({ navigation }) => {
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Year (Reference Only)*</Text>
                 <TextInput
-                  style={styles.modalInput}
+                  style={[styles.modalInput, vehicleFormErrors.year && styles.inputError]}
                   value={vehicleFormData.year}
-                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, year: text }))}
+                  onChangeText={(text) => {
+                    setVehicleFormData(prev => ({ ...prev, year: text }));
+                    if (vehicleFormErrors.year) {
+                      setVehicleFormErrors(prev => ({ ...prev, year: null }));
+                    }
+                  }}
                   placeholder="Enter asset year"
                   placeholderTextColor="#666"
                   keyboardType="numeric"
                 />
+                {vehicleFormErrors.year && <Text style={styles.errorText}>{vehicleFormErrors.year}</Text>}
                 <Text style={styles.helpText}>For reference only - not saved to database</Text>
               </View>
               
@@ -1345,13 +1395,19 @@ const DashboardScreen = ({ navigation }) => {
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Odometer (Optional)*</Text>
                 <TextInput
-                  style={styles.modalInput}
+                  style={[styles.modalInput, vehicleFormErrors.odometer && styles.inputError]}
                   value={vehicleFormData.odometer}
-                  onChangeText={(text) => setVehicleFormData(prev => ({ ...prev, odometer: text }))}
+                  onChangeText={(text) => {
+                    setVehicleFormData(prev => ({ ...prev, odometer: text }));
+                    if (vehicleFormErrors.odometer) {
+                      setVehicleFormErrors(prev => ({ ...prev, odometer: null }));
+                    }
+                  }}
                   placeholder="Enter odometer reading"
                   placeholderTextColor="#666"
                   keyboardType="numeric"
                 />
+                {vehicleFormErrors.odometer && <Text style={styles.errorText}>{vehicleFormErrors.odometer}</Text>}
               </View>
 
  
@@ -1818,6 +1874,21 @@ const styles = StyleSheet.create({
     marginTop: 10,
     borderTopWidth: 1,
     borderTopColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  loadingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 15,
+    backgroundColor: 'rgba(0, 230, 118, 0.1)',
+    borderRadius: 8,
+    marginVertical: 10,
+  },
+  loadingText: {
+    color: '#00E676',
+    fontSize: 14,
+    marginLeft: 8,
+    fontWeight: '500',
   },
 });
 
