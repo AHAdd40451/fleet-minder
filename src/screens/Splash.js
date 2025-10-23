@@ -61,7 +61,7 @@ const Splash = () => {
 
      
       <Button
-        title="Join"
+        title="Let's Go!"
         onPress={handleJoin}
         variant="white"
         style={{ marginTop: 20, width: '100%' }} 

@@ -29,7 +29,12 @@ const Step1Company = ({ data, setData, nextStep }) => {
       const response = await axios.post("https://countriesnow.space/api/v0.1/countries/states", {
         country: selectedCountry
       });
-      const list = response.data.data.states.map((item) => item.name).sort();
+  
+      // Extract and filter only Alabama and Columbia
+      const list = response.data.data.states
+        .map((item) => item.name)
+        .filter((name) => ["Alabama", "Columbia"].includes(name));
+  
       setStates(list);
     } catch (err) {
       console.log("State API Error:", err);

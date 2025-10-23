@@ -709,7 +709,7 @@ const DashboardScreen = ({ navigation }) => {
         <View style={styles.cardHeader}>
           <Text style={styles.cardTitle}>Assets ({vehiclesData.length})</Text>
           <Button 
-            title="+ Add Assets" 
+            title="+ Add Assets to Fleet" 
             onPress={openAddVehicleModal}
             variant="green"
             style={{ minWidth: 130 }}
@@ -942,7 +942,7 @@ const DashboardScreen = ({ navigation }) => {
                   <Text style={styles.loadingText}>Processing image...</Text>
                 </View>
               )}
-                <Text style={styles.inputLabel}>Asset Name</Text>
+                <Text style={styles.inputLabel}>Asset Name*</Text>
                 <TextInput
                   style={styles.modalInput}
                   value={vehicleFormData.asset_name}
@@ -1005,7 +1005,7 @@ const DashboardScreen = ({ navigation }) => {
               </View>
               
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Year </Text>
+                <Text style={styles.inputLabel}>Year* </Text>
                 <TextInput
                   style={styles.modalInput}
                   value={vehicleFormData.year}
@@ -1054,7 +1054,7 @@ const DashboardScreen = ({ navigation }) => {
               </View>
               
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Year </Text>
+                <Text style={styles.inputLabel}>Year* </Text>
                 <TextInput
                   style={styles.modalInput}
                   value={vehicleFormData.year}
@@ -1067,7 +1067,7 @@ const DashboardScreen = ({ navigation }) => {
               </View>
               
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Odometer </Text>
+                <Text style={styles.inputLabel}>Odometer* </Text>
                 <TextInput
                   style={styles.modalInput}
                   value={vehicleFormData.odometer}
@@ -1121,7 +1121,7 @@ const DashboardScreen = ({ navigation }) => {
             
             <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Asset Name (Optional)</Text>
+                <Text style={styles.inputLabel}>Asset Name*</Text>
                 <TextInput
                   style={styles.modalInput}
                   value={vehicleFormData.asset_name}
@@ -1242,7 +1242,7 @@ const DashboardScreen = ({ navigation }) => {
               </View>
               
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Year (Reference Only)</Text>
+                <Text style={styles.inputLabel}>Year (Reference Only)*</Text>
                 <TextInput
                   style={styles.modalInput}
                   value={vehicleFormData.year}
@@ -1291,7 +1291,7 @@ const DashboardScreen = ({ navigation }) => {
               </View>
               
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Year (Reference Only)</Text>
+                <Text style={styles.inputLabel}>Year (Reference Only)*</Text>
                 <TextInput
                   style={styles.modalInput}
                   value={vehicleFormData.year}
@@ -1304,7 +1304,7 @@ const DashboardScreen = ({ navigation }) => {
               </View>
               
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Odometer (Optional)</Text>
+                <Text style={styles.inputLabel}>Odometer (Optional)*</Text>
                 <TextInput
                   style={styles.modalInput}
                   value={vehicleFormData.odometer}

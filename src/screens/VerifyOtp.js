@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert, Animated } from "react-native";
+import React, { useRef, useState } from "react";
+import { View, Text, TouchableOpacity, StyleSheet, Dimensions, Alert, Animated, TextInput } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { verifyOtp, checkUserExists } from "../services/otp";
 import AsyncStorage from "@react-native-async-storage/async-storage"; 
@@ -106,17 +106,44 @@ const VerifyOtp = ({ navigation, route }) => {
             Create a 4-digit PIN code that will be used every time you login
           </Text>
 
-          <View style={styles.otpContainer}>
+         
+          {/* <View style={styles.otpContainer}>
             {[0, 1, 2, 3].map((i) => (
               <View key={i} style={styles.otpBox}>
                 <Text style={styles.otpText}>{otp[i] || ""}</Text>
               </View>
             ))}
-          </View>
+          </View> */}
+          <TouchableOpacity 
+  style={styles.otpContainer}
+  onPress={() => inputRef.current?.focus()}
+  activeOpacity={1}
+>
+  {[0, 1, 2, 3].map((i) => (
+    <View key={i} style={styles.otpBox}>
+      <Text style={styles.otpText}>{otp[i] || ""}</Text>
+    </View>
+  ))}
+</TouchableOpacity>
+
+
+    <TextInput
+  ref={inputRef}
+  value={otp}
+  onChangeText={(text) => {
+    if (/^\d*$/.test(text) && text.length <= 4) {
+      setOtp(text);
+    }
+  }}
+  keyboardType="number-pad"
+  maxLength={4}
+  style={styles.hiddenInput}
+  autoFocus={true}
+/>
 
           <Text style={styles.warning}>Never share your OTP with anyone</Text>
 
-          <View style={styles.keypad}>
+          {/* <View style={styles.keypad}>
             {["1","2","3","4","5","6","7","8","9","0"].map((num) => (
               <TouchableOpacity
                 key={num}
@@ -129,7 +156,7 @@ const VerifyOtp = ({ navigation, route }) => {
             <TouchableOpacity style={styles.key} onPress={handleDelete}>
               <Text style={styles.keyText}>⌫</Text>
             </TouchableOpacity>
-          </View>
+          </View> */}
 
           <TouchableOpacity 
             style={[styles.continueButton, loading && styles.buttonDisabled]} 
