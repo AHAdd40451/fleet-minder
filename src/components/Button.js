@@ -49,7 +49,7 @@ const Button = ({
       };
     } else {
       return {
-        paddingVertical: 16,
+        paddingVertical: 12,
         paddingHorizontal: 24,
         minHeight: 48,
       };
