@@ -27,6 +27,8 @@ import {
 } from "../utils/validation";
 import { supabase } from "../lib/supabase";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { createVehicle, syncQueue } from "../services/syncService";
+import { isOnline, addNetworkListener } from "../services/network";
 
 const { width } = Dimensions.get("window");
 
@@ -64,6 +66,7 @@ const DashboardScreen = ({ navigation }) => {
   const [meterImages, setMeterImages] = useState([]);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showAddAlert, setShowAddAlert] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
 
   const fetchUserData = async () => {
     try {
@@ -182,6 +185,34 @@ const DashboardScreen = ({ navigation }) => {
 
   useEffect(() => {
     checkAuthAndFetchData();
+    
+    // Set up network listener for auto-sync
+    const unsubscribe = addNetworkListener(async (connected) => {
+      setIsOffline(!connected);
+      if (connected) {
+        // Connection restored, sync pending items
+        try {
+          const result = await syncQueue();
+          if (result.synced > 0) {
+            // Refresh data after sync
+            await fetchUserData();
+            Alert.alert(
+              "Sync Complete",
+              `Successfully synced ${result.synced} vehicle(s)`
+            );
+          }
+        } catch (error) {
+          console.error("Error syncing after connection restored:", error);
+        }
+      }
+    });
+
+    // Check initial network state
+    setIsOffline(!isOnline());
+
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const checkAuthAndFetchData = async () => {
@@ -597,7 +628,7 @@ const DashboardScreen = ({ navigation }) => {
         return;
       }
 
-      // Insert vehicle with both company_id and user_id references
+      // Prepare vehicle payload
       const vehiclePayload = {
         company_id: companyData.id,
         user_id: storedUserId,
@@ -613,17 +644,25 @@ const DashboardScreen = ({ navigation }) => {
         image_url: null, // You can add image upload functionality later
       };
 
-      const { error: vehErr } = await supabase
-        .from("vehicles")
-        .insert(vehiclePayload);
-      if (vehErr) throw vehErr;
+      // Use sync service to create vehicle (handles offline/online)
+      const result = await createVehicle(vehiclePayload);
 
-      // Refresh vehicles data
-      await fetchUserData();
+      if (result.success) {
+        // Refresh vehicles data if online and synced
+        if (result.synced) {
+          await fetchUserData();
+        } else {
+          // If offline, show message and refresh local data
+          Alert.alert(
+            "Vehicle Saved Offline",
+            "Your vehicle has been saved locally and will be synced when you're back online."
+          );
+        }
 
-      // Close modal and show success
-      closeAddVehicleModal();
-      setShowAddAlert(true);
+        // Close modal and show success
+        closeAddVehicleModal();
+        setShowAddAlert(true);
+      }
     } catch (e) {
       console.error("Error adding vehicle:", e);
       Alert.alert(

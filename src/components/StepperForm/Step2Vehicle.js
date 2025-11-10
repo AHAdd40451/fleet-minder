@@ -16,6 +16,8 @@ import Tesseract from "tesseract.js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../../lib/supabase";
 import { validateVIN, validateYear, validateNumeric, validateRequired } from "../../utils/validation";
+import { createVehicle, syncQueue } from "../../services/syncService";
+import { isOnline } from "../../services/network";
 import Button from "../../components/Button"
 
 const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigation }) => {
@@ -240,17 +242,29 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
         company_id: comp.id,
         user_id: storedUserId, // Reference to existing user
         vin: vin || null,
-        // Add other fields if they exist in your schema
-        // make: make || null,
-        // model: model || null,
-        // year: year ? Number(year) : null,
-        // color: null,
-        // mileage: mileage ? Number(mileage) : null,
-        // odometer: odometer ? Number(odometer) : null,
-        // image_url: null,
+        make: make || null,
+        model: model || null,
+        year: year ? Number(year) : null,
+        color: color || null,
+        mileage: mileage ? Number(mileage) : null,
+        odometer: odometer ? Number(odometer) : null,
+        asset_name: assetName || null,
+        image_url: null,
       };
-      const { error: vehErr } = await supabase.from("vehicles").insert(vehiclePayload);
-      if (vehErr) throw vehErr;
+      
+      // Use sync service to create vehicle (handles offline/online)
+      const result = await createVehicle(vehiclePayload);
+      if (!result.success) {
+        throw new Error("Failed to create vehicle");
+      }
+      
+      // If offline, queue will be synced later
+      if (!result.synced) {
+        Alert.alert(
+          "Vehicle Saved Offline",
+          "Your vehicle has been saved locally and will be synced when you're back online."
+        );
+      }
 
       // 3️⃣ Update user with company_id and mark onboarding as complete
       // Get user phone from AsyncStorage to include in upsert
