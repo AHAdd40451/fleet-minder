@@ -490,14 +490,14 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
   <Button
     title="Back"
     onPress={prevStep}
-    variant="white"
+    variant="black"
     style={styles.btn}
   />
 
   <Button
     title={saving ? "Saving..." : "Finish"}
     onPress={handleFinish}
-    variant="white"
+    variant="black"
     disabled={saving}
     style={[styles.btn, saving && styles.btnDisabled]}
   />
@@ -507,12 +507,12 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
 };
 
 const styles = StyleSheet.create({
-  container: { padding: 20, marginBottom: 20 },
-  title: { color: "#fff", fontSize: 22, marginBottom: 20, textAlign: 'center' },
+  container: { padding: 20, marginBottom: 20, backgroundColor: '#fff' },
+  title: { color: "#000", fontSize: 22, marginBottom: 20, textAlign: 'center' },
   input: {
     borderWidth: 1,
-    borderColor: '#FFFFFF',
-    color: '#FFFFFF',
+    borderColor: '#000',
+    color: '#000',
     padding: 12,
     borderRadius: 8,
     fontSize: 14,
@@ -524,7 +524,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   inputLabel: {
-    color: '#fff',
+    color: '#000',
     fontSize: 16,
     fontWeight: '600',
     marginBottom: 8,
@@ -539,23 +539,23 @@ const styles = StyleSheet.create({
     marginVertical: 15,
   },
   sectionTitle: {
-    color: "#fff",
+    color: "#000",
     fontSize: 16,
     fontWeight: "bold",
     marginBottom: 10,
   },
   addImageButton: {
-    backgroundColor: "#333",
+    backgroundColor: "#f5f5f5",
     padding: 15,
     borderRadius: 8,
     alignItems: "center",
     marginBottom: 10,
     borderWidth: 1,
-    borderColor: "#555",
+    borderColor: "#ccc",
     borderStyle: "dashed",
   },
   addImageText: {
-    color: "#fff",
+    color: "#000",
     fontSize: 14,
   },
   imageGrid: {

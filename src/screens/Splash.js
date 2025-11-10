@@ -63,8 +63,8 @@ const Splash = () => {
       <Button
         title="Let's Go!"
         onPress={handleJoin}
-        variant="white"
-        style={{ marginTop: 20, width: '100%' }} 
+        variant="black"
+        style={{ marginTop: 20, width: '100%'}} 
       />
     </View>
   );
@@ -75,7 +75,7 @@ export default Splash;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'black',
+    backgroundColor: 'white',
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 20,
@@ -87,7 +87,7 @@ const styles = StyleSheet.create({
     marginBottom: 50,  
   },
   title: {
-    color: '#FFFFFF',
+    color: 'black',
     fontSize: 26,
     fontWeight: '500',
     lineHeight: 36,
@@ -95,7 +95,7 @@ const styles = StyleSheet.create({
     marginBottom: 15,  
   },
   paragraph: {
-    color: '#FFFFFF',
+    color: 'black',
     fontSize: 14,
     fontFamily: 'Poppins-Medium',
     fontWeight: '500',

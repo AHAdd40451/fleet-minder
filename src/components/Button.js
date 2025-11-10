@@ -29,6 +29,13 @@ const Button = ({
           text: theme.colors.text.light,
           borderColor: 'rgba(244, 63, 94, 0.3)',
         };
+            case 'black': 
+      case 'black':
+  return {
+    gradient: ['#000000', '#000000'], // solid black
+    text: theme.colors.text.light,    // white text
+    borderColor: '#000000',           // black border
+  };
       default: // white
         return {
           gradient: ['rgba(255, 255, 255, 0.9)', 'rgba(248, 250, 252, 0.95)'],

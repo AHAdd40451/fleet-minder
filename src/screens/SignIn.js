@@ -107,7 +107,7 @@ const SignIn = () => {
 
       <TextInput
         placeholder="(555) 123-4567"
-        placeholderTextColor="#FFFFFF"
+        placeholderTextColor="black"
         style={[styles.input, phoneError && styles.inputError]}
         keyboardType="phone-pad"
         maxLength={14}
@@ -124,7 +124,7 @@ const SignIn = () => {
       <Button
       title={loading ? 'Sending...' : 'Submit'}
       onPress={handleSubmit}
-      variant="white"
+      variant="black"
       disabled={loading}
       style={[loading && styles.buttonDisabled]}
       />
@@ -147,8 +147,8 @@ export default SignIn;
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: 'black',
-    color:"#FFFFFF",
+    backgroundColor: 'white',
+    color:"black",
     paddingHorizontal: 20,
     justifyContent: 'center',
   },
@@ -165,12 +165,12 @@ const styles = StyleSheet.create({
     marginBottom: 30,
     fontFamily: 'Poppins-Regular',
     marginTop: 80,
-    color:"#FFFFFF",
+    color:"black",
   },
   input: {
     borderWidth: 1,
-    borderColor: '#FFFFFF',
-    color: '#FFFFFF',
+    borderColor: 'black',
+    color: 'black',
     padding: 12,
     borderRadius: 8,
     fontSize: 14,
@@ -178,7 +178,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins-Regular',
   },
   button: {
-    backgroundColor: '#FFFFFF',
+    backgroundColor: 'black',
     paddingVertical: 15,
     borderRadius: 8,
     marginTop: 10,
