@@ -296,10 +296,13 @@ const DashboardScreen = ({ navigation }) => {
       {/* Company Information Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
+          <View style={styles.cardIconContainer}>
+            <Text style={styles.cardIcon}>🏢</Text>
+          </View>
           <Text style={styles.cardTitle}>Company Information</Text>
           {companyData && (
             <TouchableOpacity style={styles.editButton} onPress={openEditModal}>
-              <Text style={styles.editButtonText}> Edit</Text>
+              <Text style={styles.editButtonText}>✏️ Edit</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -307,35 +310,35 @@ const DashboardScreen = ({ navigation }) => {
           <View style={styles.infoContainer}>
             <View style={styles.infoRow}>
               <View style={styles.infoLabelContainer}>
-                
+                <Text style={styles.infoIcon}>📋</Text>
                 <Text style={styles.label}>Company Name</Text>
               </View>
               <Text style={styles.value}>{companyData.name || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
               <View style={styles.infoLabelContainer}>
-                
+                <Text style={styles.infoIcon}>📞</Text>
                 <Text style={styles.label}>Phone</Text>
               </View>
               <Text style={styles.value}>{companyData.phone || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
               <View style={styles.infoLabelContainer}>
-                
+                <Text style={styles.infoIcon}>🌍</Text>
                 <Text style={styles.label}>Country</Text>
               </View>
               <Text style={styles.value}>{companyData.country || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
               <View style={styles.infoLabelContainer}>
-                
+                <Text style={styles.infoIcon}>📍</Text>
                 <Text style={styles.label}>State</Text>
               </View>
               <Text style={styles.value}>{companyData.state || 'N/A'}</Text>
             </View>
             <View style={styles.infoRow}>
               <View style={styles.infoLabelContainer}>
-                
+                <Text style={styles.infoIcon}>📅</Text>
                 <Text style={styles.label}>Created</Text>
               </View>
               <Text style={styles.value}>{formatDate(companyData.created_at)}</Text>
@@ -343,7 +346,7 @@ const DashboardScreen = ({ navigation }) => {
           </View>
         ) : (
           <View style={styles.noDataContainer}>
-       
+            <Text style={styles.noDataIcon}>📭</Text>
             <Text style={styles.noDataText}>No company data available</Text>
           </View>
         )}
@@ -352,14 +355,16 @@ const DashboardScreen = ({ navigation }) => {
       {/* Vehicle Information Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
-          
+          <View style={styles.cardIconContainer}>
+            <Text style={styles.cardIcon}>🚗</Text>
+          </View>
           <Text style={styles.cardTitle}>Vehicle Information</Text>
         </View>
         {vehicleData ? (
           <View style={styles.infoContainer}>
             <View style={styles.infoRow}>
               <View style={styles.infoLabelContainer}>
-                
+                <Text style={styles.infoIcon}>🔢</Text>
                 <Text style={styles.label}>VIN</Text>
               </View>
               <Text style={styles.value}>{vehicleData.vin || 'N/A'}</Text>
@@ -368,6 +373,7 @@ const DashboardScreen = ({ navigation }) => {
             {vehicleData.make && (
               <View style={styles.infoRow}>
                 <View style={styles.infoLabelContainer}>
+                  <Text style={styles.infoIcon}>🏭</Text>
                   <Text style={styles.label}>Make</Text>
                 </View>
                 <Text style={styles.value}>{vehicleData.make || 'N/A'}</Text>
@@ -376,6 +382,7 @@ const DashboardScreen = ({ navigation }) => {
             {vehicleData.model && (
               <View style={styles.infoRow}>
                 <View style={styles.infoLabelContainer}>
+                  <Text style={styles.infoIcon}>🚙</Text>
                   <Text style={styles.label}>Model</Text>
                 </View>
                 <Text style={styles.value}>{vehicleData.model || 'N/A'}</Text>
@@ -384,6 +391,7 @@ const DashboardScreen = ({ navigation }) => {
             {vehicleData.year && (
               <View style={styles.infoRow}>
                 <View style={styles.infoLabelContainer}>
+                  <Text style={styles.infoIcon}>📅</Text>
                   <Text style={styles.label}>Year</Text>
                 </View>
                 <Text style={styles.value}>{vehicleData.year || 'N/A'}</Text>
@@ -392,6 +400,7 @@ const DashboardScreen = ({ navigation }) => {
             {vehicleData.mileage && (
               <View style={styles.infoRow}>
                 <View style={styles.infoLabelContainer}>
+                  <Text style={styles.infoIcon}>🛣️</Text>
                   <Text style={styles.label}>Mileage</Text>
                 </View>
                 <Text style={styles.value}>{vehicleData.mileage || 'N/A'}</Text>
@@ -400,6 +409,7 @@ const DashboardScreen = ({ navigation }) => {
             {vehicleData.odometer && (
               <View style={styles.infoRow}>
                 <View style={styles.infoLabelContainer}>
+                  <Text style={styles.infoIcon}>📊</Text>
                   <Text style={styles.label}>Odometer</Text>
                 </View>
                 <Text style={styles.value}>{vehicleData.odometer || 'N/A'}</Text>
@@ -408,6 +418,7 @@ const DashboardScreen = ({ navigation }) => {
             {vehicleData.color && (
               <View style={styles.infoRow}>
                 <View style={styles.infoLabelContainer}>
+                  <Text style={styles.infoIcon}>🎨</Text>
                   <Text style={styles.label}>Color</Text>
                 </View>
                 <Text style={styles.value}>{vehicleData.color || 'N/A'}</Text>
@@ -416,6 +427,7 @@ const DashboardScreen = ({ navigation }) => {
             {vehicleData.image_url && (
               <View style={styles.imageContainer}>
                 <View style={styles.infoLabelContainer}>
+                  <Text style={styles.infoIcon}>📸</Text>
                   <Text style={styles.label}>Vehicle Image</Text>
                 </View>
                 <Image source={{ uri: vehicleData.image_url }} style={styles.vehicleImage} />
@@ -424,6 +436,7 @@ const DashboardScreen = ({ navigation }) => {
           </View>
         ) : (
           <View style={styles.noDataContainer}>
+            <Text style={styles.noDataIcon}>🚫</Text>
             <Text style={styles.noDataText}>No vehicle data available</Text>
           </View>
         )}
@@ -432,12 +445,16 @@ const DashboardScreen = ({ navigation }) => {
       {/* User Status Card */}
       <View style={styles.card}>
         <View style={styles.cardHeader}>
+          <View style={styles.cardIconContainer}>
+            <Text style={styles.cardIcon}>👤</Text>
+          </View>
           <Text style={styles.cardTitle}>Account Status</Text>
         </View>
         {userData ? (
           <View style={styles.infoContainer}>
             <View style={styles.infoRow}>
               <View style={styles.infoLabelContainer}>
+                <Text style={styles.infoIcon}>✅</Text>
                 <Text style={styles.label}>Phone Verified</Text>
               </View>
               <View style={styles.statusContainer}>
@@ -446,13 +463,14 @@ const DashboardScreen = ({ navigation }) => {
                   { backgroundColor: userData.verified ? '#00E676' : '#FF6B35' }
                 ]}>
                   <Text style={styles.statusText}>
-                    {userData.verified ? '✓ Verified' : ' Pending'}
+                    {userData.verified ? '✓ Verified' : '⏳ Pending'}
                   </Text>
                 </View>
               </View>
             </View>
             <View style={styles.infoRow}>
               <View style={styles.infoLabelContainer}>
+                <Text style={styles.infoIcon}>📝</Text>
                 <Text style={styles.label}>Onboarding</Text>
               </View>
               <View style={styles.statusContainer}>
@@ -461,13 +479,14 @@ const DashboardScreen = ({ navigation }) => {
                   { backgroundColor: userData.is_onboarding_complete ? '#00E676' : '#FF6B35' }
                 ]}>
                   <Text style={styles.statusText}>
-                    {userData.is_onboarding_complete ? '✓ Complete' : ' Incomplete'}
+                    {userData.is_onboarding_complete ? '✓ Complete' : '⏳ Incomplete'}
                   </Text>
                 </View>
               </View>
             </View>
             <View style={styles.infoRow}>
               <View style={styles.infoLabelContainer}>
+                <Text style={styles.infoIcon}>📅</Text>
                 <Text style={styles.label}>Account Created</Text>
               </View>
               <Text style={styles.value}>{formatDate(userData.created_at)}</Text>
@@ -475,6 +494,7 @@ const DashboardScreen = ({ navigation }) => {
           </View>
         ) : (
           <View style={styles.noDataContainer}>
+            <Text style={styles.noDataIcon}>👤</Text>
             <Text style={styles.noDataText}>No user data available</Text>
           </View>
         )}
@@ -487,6 +507,7 @@ const DashboardScreen = ({ navigation }) => {
           onPress={() => navigation.navigate('Onboarding')}
         >
           <View style={styles.buttonContent}>
+            <Text style={styles.buttonIcon}>✏️</Text>
             <Text style={styles.actionButtonText}>Edit Information</Text>
           </View>
         </TouchableOpacity>
@@ -496,6 +517,7 @@ const DashboardScreen = ({ navigation }) => {
           onPress={onRefresh}
         >
           <View style={styles.buttonContent}>
+            <Text style={styles.buttonIcon}>🔄</Text>
             <Text style={[styles.actionButtonText, styles.secondaryButtonText]}>Refresh Data</Text>
           </View>
         </TouchableOpacity>
