@@ -3,23 +3,87 @@ import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'reac
 import { useNavigation } from '@react-navigation/native';
 import { Ionicons } from '@expo/vector-icons';
 import { requestOtp } from '../services/otp';
+import Button from '../components/Button';
 
 const SignIn = () => {
   const navigation = useNavigation();
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
+
+  // Format phone number to USA format (XXX) XXX-XXXX
+  const formatPhoneNumber = (text) => {
+    // Remove all non-numeric characters
+    const numericOnly = text.replace(/[^0-9]/g, '');
+    
+    // Limit to 10 digits for USA format
+    const limited = numericOnly.slice(0, 10);
+    
+    // Format as (XXX) XXX-XXXX
+    if (limited.length === 0) return '';
+    if (limited.length <= 3) return `(${limited}`;
+    if (limited.length <= 6) return `(${limited.slice(0, 3)}) ${limited.slice(3)}`;
+    return `(${limited.slice(0, 3)}) ${limited.slice(3, 6)}-${limited.slice(6)}`;
+  };
+
+  // Validate USA phone number format
+  const validatePhoneNumber = (phoneNumber) => {
+    // Remove formatting to get just digits
+    const digitsOnly = phoneNumber.replace(/[^0-9]/g, '');
+    
+    if (!digitsOnly || digitsOnly.length === 0) {
+      return 'Phone number is required';
+    }
+    
+    if (digitsOnly.length !== 10) {
+      return 'Please enter a valid 10-digit US phone number';
+    }
+    
+    // Check for valid area code (first digit cannot be 0 or 1)
+    const areaCode = digitsOnly.slice(0, 3);
+    if (areaCode[0] === '0' || areaCode[0] === '1') {
+      return 'Invalid area code. Area code cannot start with 0 or 1';
+    }
+    
+    // Check for valid exchange code (fourth digit cannot be 0 or 1)
+    const exchangeCode = digitsOnly.slice(3, 6);
+    if (exchangeCode[0] === '0' || exchangeCode[0] === '1') {
+      return 'Invalid exchange code. Exchange code cannot start with 0 or 1';
+    }
+    
+    // Check for common invalid patterns
+    if (areaCode === exchangeCode && areaCode === digitsOnly.slice(6)) {
+      return 'Phone number cannot have all identical digits';
+    }
+    
+    return null;
+  };
+
+  const handlePhoneChange = (text) => {
+    const formattedPhone = formatPhoneNumber(text);
+    setPhone(formattedPhone);
+    
+    // Clear error when user starts typing
+    if (phoneError) {
+      setPhoneError('');
+    }
+  };
 
   const handleSubmit = async () => {
-    if (!phone || phone.length < 10) {
-      Alert.alert('Error', 'Please enter a valid phone number');
+    // Validate phone number
+    const validationError = validatePhoneNumber(phone);
+    if (validationError) {
+      setPhoneError(validationError);
       return;
     }
 
     setLoading(true);
     try {
-      const result = await requestOtp(phone);
+      // Send only digits to the OTP service
+      const digitsOnly = phone.replace(/[^0-9]/g, '');
+      const result = await requestOtp(digitsOnly);
       if (result.ok) {
-        navigation.navigate('VerifyOtp', { phone });
+        navigation.navigate('VerifyOtp', { phone: digitsOnly });
       } else {
         Alert.alert('Error', result.error || 'Failed to send OTP');
       }
@@ -42,24 +106,28 @@ const SignIn = () => {
       </Text>
 
       <TextInput
-        placeholder="Phone Number"
+        placeholder="(555) 123-4567"
         placeholderTextColor="#FFFFFF"
-        style={styles.input}
+        style={[styles.input, phoneError && styles.inputError]}
         keyboardType="phone-pad"
-        maxLength={11}
+        maxLength={14}
         value={phone}
-        onChangeText={setPhone}
+        onChangeText={handlePhoneChange}
+        autoComplete="tel"
+        textContentType="telephoneNumber"
       />
+      {phoneError ? (
+        <Text style={styles.errorText}>{phoneError}</Text>
+      ) : null}
 
-      <TouchableOpacity 
-        style={[styles.button, loading && styles.buttonDisabled]} 
-        onPress={handleSubmit}
-        disabled={loading}
-      >
-        <Text style={styles.buttonText}>
-          {loading ? 'Sending...' : 'Submit'}
-        </Text>
-      </TouchableOpacity>
+      
+      <Button
+      title={loading ? 'Sending...' : 'Submit'}
+      onPress={handleSubmit}
+      variant="white"
+      disabled={loading}
+      style={[loading && styles.buttonDisabled]}
+      />
 
       {/* <View style={styles.dividerContainer}>
         <View style={styles.line} />
@@ -147,5 +215,16 @@ const styles = StyleSheet.create({
   },
   buttonDisabled: {
     opacity: 0.6,
+  },
+  inputError: {
+    borderColor: '#FF6B6B',
+    borderWidth: 2,
+  },
+  errorText: {
+    color: '#FF6B6B',
+    fontSize: 12,
+    marginTop: 5,
+    marginBottom: 10,
+    fontFamily: 'Poppins-Regular',
   },
 });

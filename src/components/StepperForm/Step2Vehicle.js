@@ -16,9 +16,12 @@ import Tesseract from "tesseract.js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../../lib/supabase";
 import { validateVIN, validateYear, validateNumeric, validateRequired } from "../../utils/validation";
+import Button from "../../components/Button"
 
 const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigation }) => {
   const [vin, setVin] = useState(data.vin || "");
+  const [assetName, setAssetName] = useState('');
+  const [color, setColor] = useState('');
   const [make, setMake] = useState(data.make || "");
   const [model, setModel] = useState(data.model || "");
   const [year, setYear] = useState(data.year || "");
@@ -285,107 +288,8 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Vehicle Information</Text>
-
-      <View>
-        <TextInput
-          style={[styles.input, errors.vin && styles.inputError]}
-          placeholder="VIN (Optional)"
-          placeholderTextColor="#777"
-          value={vin}
-          onChangeText={(text) => {
-            setVin(text);
-            if (errors.vin) {
-              setErrors(prev => ({ ...prev, vin: null }));
-            }
-          }}
-        />
-        {errors.vin && <Text style={styles.errorText}>{errors.vin}</Text>}
-      </View>
-
-      <View>
-        <TextInput
-          style={[styles.input, errors.make && styles.inputError]}
-          placeholder="Make *"
-          placeholderTextColor="#777"
-          value={make}
-          onChangeText={(text) => {
-            setMake(text);
-            if (errors.make) {
-              setErrors(prev => ({ ...prev, make: null }));
-            }
-          }}
-        />
-        {errors.make && <Text style={styles.errorText}>{errors.make}</Text>}
-      </View>
-
-      <View>
-        <TextInput
-          style={[styles.input, errors.model && styles.inputError]}
-          placeholder="Model *"
-          placeholderTextColor="#777"
-          value={model}
-          onChangeText={(text) => {
-            setModel(text);
-            if (errors.model) {
-              setErrors(prev => ({ ...prev, model: null }));
-            }
-          }}
-        />
-        {errors.model && <Text style={styles.errorText}>{errors.model}</Text>}
-      </View>
-
-      <View>
-        <TextInput
-          style={[styles.input, errors.year && styles.inputError]}
-          placeholder="Year *"
-          placeholderTextColor="#777"
-          value={year}
-          onChangeText={(text) => {
-            setYear(text);
-            if (errors.year) {
-              setErrors(prev => ({ ...prev, year: null }));
-            }
-          }}
-          keyboardType="numeric"
-        />
-        {errors.year && <Text style={styles.errorText}>{errors.year}</Text>}
-      </View>
-
-      <View>
-        <TextInput
-          style={[styles.input, errors.mileage && styles.inputError]}
-          placeholder="Mileage (Optional)"
-          placeholderTextColor="#777"
-          value={mileage}
-          onChangeText={(text) => {
-            setMileage(text);
-            if (errors.mileage) {
-              setErrors(prev => ({ ...prev, mileage: null }));
-            }
-          }}
-          keyboardType="numeric"
-        />
-        {errors.mileage && <Text style={styles.errorText}>{errors.mileage}</Text>}
-      </View>
-
-      <View>
-        <TextInput
-          style={[styles.input, errors.odometer && styles.inputError]}
-          placeholder="Odometer (Optional)"
-          placeholderTextColor="#777"
-          value={odometer}
-          onChangeText={(text) => {
-            setOdometer(text);
-            if (errors.odometer) {
-              setErrors(prev => ({ ...prev, odometer: null }));
-            }
-          }}
-          keyboardType="numeric"
-        />
-        {errors.odometer && <Text style={styles.errorText}>{errors.odometer}</Text>}
-      </View>
-
+      <Text style={styles.title}>Welcome! Your first 
+      asset has been added.</Text>
       <View style={styles.imageSection}>
         <Text style={styles.sectionTitle}>VIN Images</Text>
         <TouchableOpacity
@@ -435,28 +339,176 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
           </View>
         )}
       </View>
+      
+      <Text style={styles.inputLabel}>Asset Name*</Text>
+      <View>
+        <TextInput
+          style={[styles.input, errors.assetName && styles.inputError]}
+          placeholder="Enter asset name"
+          placeholderTextColor="#777"
+          value={assetName}
+          onChangeText={(text) => {
+            setAssetName(text);
+            if (errors.assetName) {
+              setErrors(prev => ({ ...prev, assetName: null }));
+            }
+          }}
+        />
+        {errors.assetName && <Text style={styles.errorText}>{errors.assetName}</Text>}
+      </View>
+
+      <Text style={styles.inputLabel}>Asset Color*</Text>
+      <View>
+        <TextInput
+          style={[styles.input, errors.color && styles.inputError]}
+          placeholder="Enter color name"
+          placeholderTextColor="#777"
+          value={color}
+          onChangeText={(text) => {
+            setColor(text);
+            if (errors.color) {
+              setErrors(prev => ({ ...prev, color: null }));
+            }
+          }}
+        />
+        {errors.color && <Text style={styles.errorText}>{errors.color}</Text>}
+      </View>
+
+
+     <Text style={styles.inputLabel}>Vin</Text>
+      <View>
+        <TextInput
+          style={[styles.input, errors.vin && styles.inputError]}
+          placeholder="VIN (Optional)"
+          placeholderTextColor="#777"
+          value={vin}
+          onChangeText={(text) => {
+            setVin(text);
+            if (errors.vin) {
+              setErrors(prev => ({ ...prev, vin: null }));
+            }
+          }}
+        />
+        {errors.vin && <Text style={styles.errorText}>{errors.vin}</Text>}
+      </View>
+
+      <Text style={styles.inputLabel}>Make*</Text>
+      <View>
+        <TextInput
+          style={[styles.input, errors.make && styles.inputError]}
+          placeholder="Make *"
+          placeholderTextColor="#777"
+          value={make}
+          onChangeText={(text) => {
+            setMake(text);
+            if (errors.make) {
+              setErrors(prev => ({ ...prev, make: null }));
+            }
+          }}
+        />
+        {errors.make && <Text style={styles.errorText}>{errors.make}</Text>}
+      </View>
+
+
+      <Text style={styles.inputLabel}>Modal*</Text>
+      <View>
+        <TextInput
+          style={[styles.input, errors.model && styles.inputError]}
+          placeholder="Model *"
+          placeholderTextColor="#777"
+          value={model}
+          onChangeText={(text) => {
+            setModel(text);
+            if (errors.model) {
+              setErrors(prev => ({ ...prev, model: null }));
+            }
+          }}
+        />
+        {errors.model && <Text style={styles.errorText}>{errors.model}</Text>}
+      </View>
+      
+      <Text style={styles.inputLabel}>Year*</Text>
+      <View>
+        <TextInput
+          style={[styles.input, errors.year && styles.inputError]}
+          placeholder="Year *"
+          placeholderTextColor="#777"
+          value={year}
+          onChangeText={(text) => {
+            setYear(text);
+            if (errors.year) {
+              setErrors(prev => ({ ...prev, year: null }));
+            }
+          }}
+          keyboardType="numeric"
+        />
+        {errors.year && <Text style={styles.errorText}>{errors.year}</Text>}
+      </View>
+     
+      <Text style={styles.inputLabel}>Mileage</Text>
+      <View>
+        <TextInput
+          style={[styles.input, errors.mileage && styles.inputError]}
+          placeholder="Mileage (Optional)"
+          placeholderTextColor="#777"
+          value={mileage}
+          onChangeText={(text) => {
+            setMileage(text);
+            if (errors.mileage) {
+              setErrors(prev => ({ ...prev, mileage: null }));
+            }
+          }}
+          keyboardType="numeric"
+        />
+        {errors.mileage && <Text style={styles.errorText}>{errors.mileage}</Text>}
+      </View>
+     
+      <Text style={styles.inputLabel}>Odometer</Text>
+      <View>
+        <TextInput
+          style={[styles.input, errors.odometer && styles.inputError]}
+          placeholder="Odometer (Optional)"
+          placeholderTextColor="#777"
+          value={odometer}
+          onChangeText={(text) => {
+            setOdometer(text);
+            if (errors.odometer) {
+              setErrors(prev => ({ ...prev, odometer: null }));
+            }
+          }}
+          keyboardType="numeric"
+        />
+        {errors.odometer && <Text style={styles.errorText}>{errors.odometer}</Text>}
+      </View>
+
+     
 
       {loading && <ActivityIndicator color="#fff" style={{ marginTop: 10 }} />}
 
+    
       <View style={styles.buttonsRow}>
-        <TouchableOpacity style={styles.btn} onPress={prevStep}>
-          <Text style={styles.btnText}>Back</Text>
-        </TouchableOpacity>
-        <TouchableOpacity 
-          style={[styles.btn, saving && styles.btnDisabled]} 
-          onPress={handleFinish}
-          disabled={saving}
-        >
-          <Text style={styles.btnText}>{saving ? "Saving..." : "Finish"}</Text>
-        </TouchableOpacity>
-      </View>
+  <Button
+    title="Back"
+    onPress={prevStep}
+    variant="white"
+    style={styles.btn}
+  />
+
+  <Button
+    title={saving ? "Saving..." : "Finish"}
+    onPress={handleFinish}
+    variant="white"
+    disabled={saving}
+    style={[styles.btn, saving && styles.btnDisabled]}
+  />
+</View>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { padding: 20, marginBottom: 20 },
-  title: { color: "#fff", fontSize: 22, marginBottom: 20 },
+  title: { color: "#fff", fontSize: 22, marginBottom: 20, textAlign: 'center' },
   input: {
     borderWidth: 1,
     borderColor: '#FFFFFF',
@@ -470,6 +522,12 @@ const styles = StyleSheet.create({
   inputError: {
     borderColor: "#ff4444",
     borderWidth: 1,
+  },
+  inputLabel: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
   },
   errorText: {
     color: "#ff4444",
@@ -534,7 +592,7 @@ const styles = StyleSheet.create({
   },
   btn: {
     backgroundColor: "#fff",
-    padding: 15,
+    // padding: 15,
     borderRadius: 8,
     width: "48%",
   },

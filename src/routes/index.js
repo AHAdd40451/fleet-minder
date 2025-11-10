@@ -7,6 +7,7 @@ import OnboardingForm from '../screens/OnBoardingForm';
 import Splash from '../screens/Splash';  
 import SignIn from '../screens/SignIn';
 import VerifyOtp from '../screens/VerifyOtp';
+import BottomNavWrapper from '../Navigation/BottomNavWrapper';
 
 const Stack = createStackNavigator();
 
@@ -22,7 +23,8 @@ export default function Routes() {
         <Stack.Screen name="Splash" component={Splash} /> 
         <Stack.Screen name="Onboarding" component={OnboardingForm} />
         <Stack.Screen name="Home" component={HomeScreen} />
-        <Stack.Screen name="Dashboard" component={DashboardScreen} />
+        {/* Render tabs only on Dashboard by using BottomNavWrapper here */}
+        <Stack.Screen name="Dashboard" component={BottomNavWrapper} />
         <Stack.Screen name="SignIn" component={SignIn} />
         <Stack.Screen name="VerifyOtp" component={VerifyOtp} />
       </Stack.Navigator>
