@@ -16,7 +16,7 @@ import Tesseract from "tesseract.js";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../../lib/supabase";
 import { validateVIN, validateYear, validateNumeric, validateRequired } from "../../utils/validation";
-import { createVehicle, syncQueue } from "../../services/syncService";
+import { createVehicle, createCompany, syncQueue, queueVehicleCreation, getLocalCompaniesList } from "../../services/syncService";
 import { isOnline } from "../../services/network";
 import Button from "../../components/Button"
 
@@ -228,19 +228,46 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
         return;
       }
 
-      // 1️⃣ Insert company with user_id reference
-      const { data: comp, error: compErr } = await supabase.from("companies").insert({
+      // 1️⃣ Create company using sync service (handles offline/online)
+      const companyPayload = {
         name: companyData.name,
         country: companyData.country,
         state: companyData.state,
-        user_id: storedUserId, // Reference to existing user
-      }).select().single();
-      if (compErr) throw compErr;
+        user_id: storedUserId,
+      };
+      
+      const companyResult = await createCompany(companyPayload);
+      if (!companyResult.success) {
+        throw new Error("Failed to create company");
+      }
 
-      // 2️⃣ Insert vehicle with both company_id and user_id references
+      // Get company ID (server ID if synced, local ID if queued)
+      let companyId = companyResult.synced 
+        ? companyResult.data.id 
+        : companyResult.localId;
+
+      // If company was queued (not synced), try to sync it first if online
+      if (!companyResult.synced && isOnline()) {
+        try {
+          await syncQueue();
+          // Re-check if company was synced after sync attempt
+          const localCompanies = await getLocalCompaniesList();
+          const syncedCompany = localCompanies.find(c => c.id === companyId && c.synced);
+          if (syncedCompany && syncedCompany.serverId) {
+            // Company was synced, use server ID
+            companyId = syncedCompany.serverId;
+            companyResult.synced = true;
+            companyResult.data = { id: syncedCompany.serverId };
+          }
+        } catch (syncError) {
+          console.warn('Could not sync company before vehicle creation:', syncError);
+        }
+      }
+
+      // 2️⃣ Create vehicle with both company_id and user_id references
       const vehiclePayload = {
-        company_id: comp.id,
-        user_id: storedUserId, // Reference to existing user
+        company_id: companyResult.synced ? companyId : null, // null if offline, will be set during sync
+        user_id: storedUserId,
         vin: vin || null,
         make: make || null,
         model: model || null,
@@ -252,35 +279,53 @@ const Step2Vehicle = ({ companyData, data, setData, nextStep, prevStep, navigati
         image_url: null,
       };
       
+      // Only add localCompanyId if company wasn't synced (for dependency tracking)
+      if (!companyResult.synced) {
+        vehiclePayload.localCompanyId = companyId;
+      }
+      
       // Use sync service to create vehicle (handles offline/online)
-      const result = await createVehicle(vehiclePayload);
-      if (!result.success) {
+      // If company wasn't synced, always queue vehicle to maintain dependency
+      let vehicleResult;
+      if (companyResult.synced) {
+        vehicleResult = await createVehicle(vehiclePayload);
+      } else {
+        // Company wasn't synced, queue vehicle to maintain dependency
+        vehicleResult = await queueVehicleCreation(vehiclePayload);
+      }
+      
+      if (!vehicleResult.success) {
         throw new Error("Failed to create vehicle");
       }
       
-      // If offline, queue will be synced later
-      if (!result.synced) {
+      // Show appropriate message based on sync status
+      const vehicleSynced = vehicleResult.synced !== undefined ? vehicleResult.synced : false;
+      if (!companyResult.synced || !vehicleSynced) {
         Alert.alert(
-          "Vehicle Saved Offline",
-          "Your vehicle has been saved locally and will be synced when you're back online."
+          "Data Saved Offline",
+          "Your company and vehicle have been saved locally and will be synced when you're back online."
         );
       }
 
       // 3️⃣ Update user with company_id and mark onboarding as complete
-      // Get user phone from AsyncStorage to include in upsert
-      const storedUserPhone = await AsyncStorage.getItem('userPhone');
-      
-      const { error: updateUserErr } = await supabase
-        .from('users')
+      // Only update user if company was synced (has server ID)
+      if (companyResult.synced) {
+        const storedUserPhone = await AsyncStorage.getItem('userPhone');
         
-        .upsert({ 
-          id: storedUserId,
-          phone: storedUserPhone, // Include phone to satisfy NOT NULL constraint
-          company_id: comp.id,
-          is_onboarding_complete: true 
-        });
-      
-      if (updateUserErr) console.warn('Could not update user:', updateUserErr);
+        const { error: updateUserErr } = await supabase
+          .from('users')
+          .upsert({ 
+            id: storedUserId,
+            phone: storedUserPhone, // Include phone to satisfy NOT NULL constraint
+            company_id: companyId,
+            is_onboarding_complete: true 
+          });
+        
+        if (updateUserErr) console.warn('Could not update user:', updateUserErr);
+      } else {
+        // If offline, store company_id locally for later user update
+        await AsyncStorage.setItem('pendingCompanyId', companyId);
+      }
 
       // Persist local gate so user skips onboarding next app launch
       await AsyncStorage.setItem("isOnboardingComplete", "true");

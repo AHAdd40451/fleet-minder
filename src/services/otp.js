@@ -88,6 +88,7 @@ export const verifyOtp = async (phone, code) => {
         phone: phone,
         verified: true,
         is_onboarding_complete: false,
+        role: "user",
         created_at: new Date().toISOString()
       })
       .select()

@@ -8,6 +8,7 @@ import Splash from '../screens/Splash';
 import SignIn from '../screens/SignIn';
 import VerifyOtp from '../screens/VerifyOtp';
 import BottomNavWrapper from '../Navigation/BottomNavWrapper';
+import Setting from '../screens/Setting';
 
 const Stack = createStackNavigator();
 
@@ -27,6 +28,7 @@ export default function Routes() {
         <Stack.Screen name="Dashboard" component={BottomNavWrapper} />
         <Stack.Screen name="SignIn" component={SignIn} />
         <Stack.Screen name="VerifyOtp" component={VerifyOtp} />
+        <Stack.Screen name="Setting" component={Setting} />
       </Stack.Navigator>
     </NavigationContainer>
   );
