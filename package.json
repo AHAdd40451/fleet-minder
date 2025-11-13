@@ -3,12 +3,12 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "expo start",
-    "start:web": "expo start --web",
+    "start": "node api.js && expo start",
+    "start:web": "node api.js && expo start --web",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "dev": "expo start --web --port 5000"
+    "dev": "node api.js && expo start --web --port 5000"
   },
   "keywords": [
     "react-native",

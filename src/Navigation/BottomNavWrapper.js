@@ -82,7 +82,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
               accessibilityState={isFocused ? { selected: true } : {}}
               accessibilityLabel={options.tabBarAccessibilityLabel}
               testID={options.tabBarTestID}
-              onPress={route.name === 'Wallet' || route.name === 'Chat' || route.name === 'Profile' ? () => {} : onPress}
+              onPress={route.name === 'Wallet' || route.name === 'Chat' ? () => {} : onPress}
               onLongPress={onLongPress}
               style={styles.tabItem}
             >
@@ -162,11 +162,6 @@ export default function BottomNavWrapper() {
         component={ProfileScreen}
         options={{
           tabBarLabel: 'Profile',
-        }}
-        listeners={{
-          tabPress: (e) => {
-            e.preventDefault();
-          },
         }}
       />
     </Tab.Navigator>
